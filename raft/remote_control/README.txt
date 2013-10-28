@@ -17,7 +17,8 @@ the gamepad.
 
 5. BUGS, LIMITATIONS AND OTHER "FEATURES"
 The Processing code is not guaranteed to run in Linux due to some apparent library conflicts (at least in Ubuntu
-12.04.3) and compatibility with the xbox gamepad.
+12.04.3) and lack of compatibility with the xbox gamepad. It also seems not to run on 64-bit versions of processing -- use the
+32 bit version)
 
 ----
 Pedro Vaz Teixeira (pvt@mit.edu), 2013
