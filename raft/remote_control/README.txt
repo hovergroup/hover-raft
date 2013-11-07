@@ -10,7 +10,7 @@ and direction outputs for each of the four motors.
 
 Within the Arduino and Processing directories you should find several different sketches - one per raft iteration:
 
-Virgil I
+Virgil I - Rebirth!
 
 The old raft, reborn.
 
@@ -19,27 +19,38 @@ while the right controls
 Arduino: 
 ----
 
-Virgil II
+Virgil II:
 
-Processing: 
+We've added a 20lbf trolling motor to Virgil I! This means another Pololu module to handle the trolling motor. We've also turned it into a tethered vehicle using an extension cord. For now the tether is only carrying power - Virgil II can draw up to 20A@12V - hand drill not included.
+
+Processing: The triggers now control the trolling motor speed and direction. The data packet has been modified to carry speed and direction for the main thruster
+Arduino: Arduino code modified to read & parse the longer data packet and control the additional thruster
+
+----
+
+Virgil III:
+
+We've upgraded the main thruster to a 35lbf thruster harvested from an old kayak. This requires two H-bridges in parallel (or one full Pololu carrier module).
+
+Processing:
 Arduino:
 
 ----
 
-Virgil III
+Virgil IV:
 
+Processing:
+Arduino:
 
-
-----
+---- 
 
 2. DEPENDENCIES
-The processing sketch makes use of the procontroll library (http://creativecomputing.cc/p5libs/procontroll/) to interface with
-the gamepad.
+The processing sketch makes use of the procontroll library (http://creativecomputing.cc/p5libs/procontroll/) to interface with the gamepad.
 
-3. Processing 
+3. EXECUTION
+After uploading the arduino code to the raft, 
 
-4. Arduino  
-
+4. FUTURE FEATURES
 
 5. BUGS, LIMITATIONS AND OTHER "FEATURES"
 The Processing code is not guaranteed to run in Linux due to some apparent library conflicts (at least in Ubuntu
