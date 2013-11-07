@@ -139,7 +139,7 @@ void draw()
   v[1] = 255*sliders.get(0).getValue();
   v[2] = -255*sliders.get(3).getValue();
   v[3] = -255*sliders.get(2).getValue();
-  v[4] = -255*sliders.get(4).getValue();
+  v[4] = 255*sliders.get(4).getValue();
   println(v);
   
   // telecommand data packet
