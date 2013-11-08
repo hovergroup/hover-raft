@@ -132,7 +132,6 @@ void draw()
 
    println("");
   
-  
   // mixing of control signals to get motor demands
   float[] v = new float[5];
   v[0] = 255*sliders.get(1).getValue();  
@@ -141,6 +140,15 @@ void draw()
   v[3] = -255*sliders.get(2).getValue();
   v[4] = 255*sliders.get(4).getValue();
   println(v);
+  
+  // dead zone
+  for(int i=0; i<5; i++)
+  {
+    if(abs(v[i])<20)
+    {
+     v[i]=0;
+    } 
+  }
   
   // telecommand data packet
   byte[] packet = new byte[16];
