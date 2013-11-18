@@ -215,20 +215,20 @@ while(stopflag==0)
     
     
     % compute control commands to rafts
-    thetaOld = atan((xOld(3,2)-xOld(3,1))/(xOld(1,2)-xOld(1,1)))
+    %thetaOld = atan((xOld(3,2)-xOld(3,1))/(xOld(1,2)-xOld(1,1)))
     theta = atan((xMeas(3,2)-xMeas(3,1))/(xMeas(1,2)-xMeas(1,1)))
-    uOut = raftcontrol(theta,thetaOld)
+    uOut = raftcontrol(theta)
     
     % send control commands to rafts:
-    s = serial('COM1')
-set(s,'BaudRate',115200)
-set(s,'ByteOrder','bigEndian')
-get(s)
+    s = serial('COM5');
+set(s,'BaudRate',9600);
+set(s,'ByteOrder','bigEndian');
+%get(s);
 
 fopen(s);
 
-fwrite(s,uOut);
-
+fwrite(s,uint8(uOut));
+fclose(s);
     % use this format:
     % +123.12 for x and y thrust (N)
     % fprintf('%+07.2f',a)
