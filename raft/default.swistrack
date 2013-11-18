@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<swistrack>
+  <components>
+    <component type="InputCameraUSB"/>
+    <component type="ConvertToGray">
+      <parameter name="Channel" value="0"/>
+    </component>
+    <component type="ThresholdGray">
+      <parameter name="InvertThreshold" value=""/>
+      <parameter name="Threshold" value="250"/>
+    </component>
+    <component type="BlobSelection">
+      <parameter name="AreaBool" value="true"/>
+      <parameter name="CompactnessBool" value="true"/>
+      <parameter name="MaxArea" value="300"/>
+      <parameter name="MaxCompactness" value=""/>
+      <parameter name="MaxOrientation" value=""/>
+      <parameter name="MinArea" value="70"/>
+      <parameter name="MinCompactness" value="0.81"/>
+      <parameter name="MinOrientation" value=""/>
+      <parameter name="OrientationBool" value=""/>
+    </component>
+  </components>
+  <server>
+    <port>3000</port>
+  </server>
+</swistrack>
