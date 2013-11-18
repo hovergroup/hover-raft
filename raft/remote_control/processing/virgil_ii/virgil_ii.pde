@@ -179,7 +179,7 @@ void draw()
   port.write(packet);
   println("sent:");
   
-  delay(50);  // 20Hz should be fine
+  delay(100);  // 20Hz should be fine
 
   println("received:");
   while (port.available() > 0) {
