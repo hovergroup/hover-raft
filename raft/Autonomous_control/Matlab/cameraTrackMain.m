@@ -220,7 +220,7 @@ while(stopflag==0)
     uOut = raftcontrol(theta,thetaOld)
     
     % send control commands to rafts:
-    s = serial('COM5')
+    s = serial('COM1')
 set(s,'BaudRate',115200)
 set(s,'ByteOrder','bigEndian')
 get(s)
