@@ -31,7 +31,7 @@ print=0;
 % delete log after final plots (use this for testing/debugging)?
 deleteLog=0;
 % number of vehicles to track: (MAKE SURE THIS MATCHES SWISSTRACK)
-numBlobs=3;
+numBlobs=2;
 
 
 %% MORE CONFIG PARAMETERS
