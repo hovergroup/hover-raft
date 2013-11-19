@@ -51,7 +51,7 @@ if(debug);inputStart=tic;end
 
 numPackets=1;                       % number of packets to store
 numLines=numBlobs+1;                % lines in one packet
-data=cell(numLines,numPackets)
+data=cell(numLines,numPackets);
 
 % init aux variables
 packets=0;
@@ -81,7 +81,7 @@ while(packets<numPackets)
                 foundStart=1;
                 break
             end
-            waste=waste+1
+            waste=waste+1;
             
         end
         %if(debug && foundStart==0);fprintf('\nwaste= %i',waste);end
@@ -103,7 +103,7 @@ while(packets<numPackets)
             % use b-1 if start with $FRAME
             lineIn=lineIn(1:b-1);
             %store line in data cell:
-            data{line,packets+1}=lineIn
+            data{line,packets+1}=lineIn;
             line=line+1;
             if(debug);fprintf([lineIn,'\n']);end
             % check for end of packet:

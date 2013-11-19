@@ -118,12 +118,21 @@ xMeas=zeros(numStates,numBlobs);
 xPlus=zeros(numStates,numBlobs);
 uOld=zeros(2,numBlobs);
 
+    % send control commands to rafts:
+    s = serial('COM5');
+set(s,'BaudRate',9600);
+set(s,'ByteOrder','bigEndian');
+%get(s);
+
+fopen(s);
+
+
 while(stopflag==0)
     
     time=toc(packetsStart);
     
     % get data from SwissTrack TCP/IP stream
-    data=cameraTrackInput(trackIn,numBlobs)
+    data=cameraTrackInput(trackIn,numBlobs);
     [numLines,b]=size(data);
     %if(print);fprintf('\nnew packet: \n');end
     packNum=packNum+1;
@@ -167,14 +176,14 @@ while(stopflag==0)
         xMeas(:,i)=measOUT(1:5)';
     end
     
-    xMeas
+    xMeas;
     
     %initialization: starting prediction is 1st measurement:
     if(packNum==1)
-        xOld=xMeas
+        xOld=xMeas;
     else
         % Store previous position estimate
-        xOld=xPlus
+        xOld=xPlus;
         %uOld=uOut;
     end
     
@@ -197,14 +206,14 @@ while(stopflag==0)
         theta=xPlus(5,i);
         
         % log data to text file
-        fprintf(fid,'num:,%i,time:,%f,ID:,%i,x:,%f,y:,%f,theta:,%f,xdot:,%f,ydot,%f\n',...
-            packNum,time,ID,x,y,theta,xdot,ydot);
-        
+%         fprintf(fid,'num:,%i,time:,%f,ID:,%i,x:,%f,y:,%f,theta:,%f,xdot:,%f,ydot,%f\n',...
+%             packNum,time,ID,x,y,theta,xdot,ydot);
+%         
         if(plotTime);plotStart=tic;k=k+1;end
         
         % plot in real time, check if ESC pressed to stop
-        realtimePlotCam(realtimePlotCase,h,ID,xMeas(1,i),xMeas(3,i),...
-            xRes,yRes,numBlobs); 
+%         realtimePlotCam(realtimePlotCase,h,ID,xMeas(1,i),xMeas(3,i),...
+%             xRes,yRes,numBlobs); 
         %realtimePlotCam(realtimePlotCase,h,ID,x,y,...
         %    xRes,yRes,numBlobs); 
         if(plotTime);dtPlot(k)=toc(plotStart);end
@@ -216,31 +225,24 @@ while(stopflag==0)
     
     % compute control commands to rafts
     %thetaOld = atan((xOld(3,2)-xOld(3,1))/(xOld(1,2)-xOld(1,1)))
-    theta = atan((xMeas(3,2)-xMeas(3,1))/(xMeas(1,2)-xMeas(1,1)))
-    uOut = raftcontrol(theta)
+    theta = atan((xMeas(3,2)-xMeas(3,1))/(xMeas(1,2)-xMeas(1,1)));
+    uOut = raftcontrol(theta);
     
-    % send control commands to rafts:
-    s = serial('COM5');
-set(s,'BaudRate',9600);
-set(s,'ByteOrder','bigEndian');
-%get(s);
-
-fopen(s);
 
 fwrite(s,uint8(uOut));
-fclose(s);
+
     % use this format:
     % +123.12 for x and y thrust (N)
     % fprintf('%+07.2f',a)
     
     
     % pure delay
-    pause(loopDelay/1000);
+    %pause(loopDelay/1000); 
     % constrain (roughly) to loopTime
 
-    while((toc(packetsStart)-time)<(loopTime/1000))
-        %fprintf('%0.3f\n',(toc(packetsStart)-time)) 
-    end
+%     while((toc(packetsStart)-time)<(loopTime/1000))
+%         %fprintf('%0.3f\n',(toc(packetsStart)-time)) 
+%     end
     
     % look for ESC key - stops script
     key=get(h,'CurrentKey');
@@ -249,6 +251,7 @@ fclose(s);
 end
 tFinal=toc(packetsStart);
 
+fclose(s);
 
 %% post-run
 fclose(fid);
