@@ -1,7 +1,6 @@
 
 #include "pins.h"
 #include "Motor.h"
-#include "hmc6343.h"
 
 Motor motor0(motor0_in_a, motor0_in_b, motor0_in_pwm);
 Motor motor1(motor1_in_a, motor1_in_b, motor1_in_pwm);
@@ -126,6 +125,11 @@ void loop()
         }
         index-=16;
         //index = delta;
+        for(int i = 0; i<index;i++)
+        {
+          Serial.print((char)buffer[i]);
+        }
+        
       }
     } 
   } 
