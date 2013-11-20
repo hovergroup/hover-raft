@@ -41,4 +41,4 @@ m5d = 3;
 % m5s = 0;
 % m5d = 3;
 
-control = uint8(['<';'<';'<';m1s; m1d; m2s; m2d; m3s; m3d; m4s; m4d; m5s; m5d;'>';'>';'>']);
+control = uint8(['<';'[';'(';m1s; m1d; m2s; m2d; m3s; m3d; m4s; m4d; m5s; m5d;')';']';'>']);

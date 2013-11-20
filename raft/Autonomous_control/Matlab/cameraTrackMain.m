@@ -230,7 +230,7 @@ while(stopflag==0)
     y=1/2*(xMeas(3,2)+xMeas(3,1))
     %uOut = raftcontrol(theta);
     if (badData)
-        uOut = uint8(['<';'<';'<';0; 3; 0; 3; 0; 3; 0; 3; 0; 3;'>';'>';'>'])
+        uOut = uint8(['<';'[';'(';0; 3; 0; 3; 0; 3; 0; 3; 0; 3;')';']';'>'])
     else
         uOut = raftcontrolxy(theta,x,y)
     end 

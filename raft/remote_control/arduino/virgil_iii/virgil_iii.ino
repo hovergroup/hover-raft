@@ -64,7 +64,7 @@ void loop()
 { 
   unreadSize = Serial3.available();
   
-  if(millis() - lastReceived > 1000)
+  if(millis() - lastReceived > 500)
   {
     motor0.set(0, 0);
     motor1.set(0, 0);
