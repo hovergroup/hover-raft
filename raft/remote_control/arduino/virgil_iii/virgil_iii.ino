@@ -91,7 +91,8 @@ void loop()
       }
       
     }
-    for (int i=startIndex; i < index-2; i++) 
+    for (int i=star
+    tIndex; i < index-2; i++) 
     {
       if (buffer[i] == '>' && buffer[i+1] == '>' && buffer[i+2] == '>') 
       {

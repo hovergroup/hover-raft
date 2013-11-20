@@ -212,8 +212,8 @@ while(stopflag==0)
         if(plotTime);plotStart=tic;k=k+1;end
         
         % plot in real time, check if ESC pressed to stop
-%         realtimePlotCam(realtimePlotCase,h,ID,xMeas(1,i),xMeas(3,i),...
-%             xRes,yRes,numBlobs); 
+        realtimePlotCam(realtimePlotCase,h,ID,xMeas(1,i),xMeas(3,i),...
+            xRes,yRes,numBlobs); 
         %realtimePlotCam(realtimePlotCase,h,ID,x,y,...
         %    xRes,yRes,numBlobs); 
         if(plotTime);dtPlot(k)=toc(plotStart);end
@@ -225,8 +225,11 @@ while(stopflag==0)
     
     % compute control commands to rafts
     %thetaOld = atan((xOld(3,2)-xOld(3,1))/(xOld(1,2)-xOld(1,1)))
-    theta = atan((xMeas(3,2)-xMeas(3,1))/(xMeas(1,2)-xMeas(1,1)));
-    uOut = raftcontrol(theta);
+    theta = atan((xMeas(3,2)-xMeas(3,1))/(xMeas(1,2)-xMeas(1,1)))
+    x=1/2*(xMeas(1,2)+xMeas(1,1))
+    y=1/2*(xMeas(3,2)+xMeas(3,1))
+    %uOut = raftcontrol(theta);
+    uOut = raftcontrolxy(theta,x,y)
     
 
 fwrite(s,uint8(uOut));

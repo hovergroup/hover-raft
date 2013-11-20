@@ -1,21 +1,21 @@
 function control = raftcontrolxy(theta,x,y)
 
 %Simple P controller for raft xy, for testing purposes
-xdes = 0;
-ydes = 0;
+xdes = 200;
+ydes = 2000;
 thetades=0;
 
 Kp = 0.01;
-Kpx = 0.01;
-Kpy = 0.01;
+Kpx =0.03;
+Kpy = 0.03;
 
 thrustmax = pi*Kp;
 thrust_theta = -Kp*(theta-thetades);
-xthrust = -Kpx*(x-xdes);
-ythrust = -Kpy*(y-ydes);
+xthrust = -Kpx*(x-xdes)
+ythrust = -Kpy*(y-ydes)
 
-M24 = (ythrust-xthrust*tan(theta))/(cos(theta)-sin(theta)*tan(theta));
-M13 = (xthrust-M24*sin(theta))/cos(theta);
+M24 = (xthrust-ythrust*tan(theta))/(cos(theta)-sin(theta)*tan(theta))
+M13 = (ythrust-M24*sin(theta))/cos(theta)
 
 %now convert thrust to m1d,m1s,m2d,...,m5s
 m1s = abs(1/2*M13);
@@ -29,14 +29,14 @@ m4d = 2+sign(-M24);
 m5s = 0;
 m5d = 3;
 
-% m1s = 127;
+% m1s = 0;
 % %m1s = floor(thrust/thrustmax*255);
 % m1d = 1;
-% m2s = 127;
+% m2s = 0;
 % m2d = 3;
-% m3s = 127;
+% m3s = 0;
 % m3d = 1;
-% m4s = 127;
+% m4s = 0;
 % m4d = 3;
 % m5s = 0;
 % m5d = 3;
