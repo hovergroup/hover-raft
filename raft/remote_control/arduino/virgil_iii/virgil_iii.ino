@@ -17,6 +17,8 @@ byte buffer[128];
 int index=0;
 int unreadSize=0;
 
+unsigned long lastReceived = 0;  // safety: kill all motors if no packet is received in more than one second
+
 void setup()  
 { 
   digitalWrite(13, HIGH);
@@ -61,50 +63,84 @@ void setup()
 void loop()  
 { 
   unreadSize = Serial3.available();
-  //Serial.println(index);
-  if(index + unreadSize > 127)
-  {
-    Serial.println("Buffer overflow!");
-    index = 0; 
-  }
-  for(int i = 0; i < unreadSize; i++)
-  {
-    buffer[index+i] = (byte)Serial3.read();
-    //Serial.print(".");
-  }
-  index+=unreadSize;
   
+  if(millis() - lastReceived > 1000)
+  {
+    motor0.set(0, 0);
+    motor1.set(0, 0);
+    motor2.set(0, 0);
+    motor3.set(0, 0);
+    motor4.set(0, 0);
+  }
+  
+  if(unreadSize>0)
+  {
+    /*
+    Serial.print("Got ");
+    Serial.print(unreadSize);
+    Serial.println(" bytes:");
+    */
+    if(index + unreadSize > 127)
+    {
+      Serial.println("Buffer overflow!");
+      index = 0; 
+    }
+    
+    for(int i = 0; i < unreadSize; i++)
+    {
+      buffer[index + i] = (byte)Serial3.read();
+      //Serial.print((char)buffer[index+i]);
+    }
+    index = index + unreadSize;
+  }
+
   if(index > 16)
   {
-    Serial.println(index);
-    
     int startIndex=-1; 
     int stopIndex=-1;
     
     // look for header & footer
     for (int i=0; i < index-3; i++) 
     {
-      if ((buffer[i] == '<') && (buffer[i+1] == '<') && (buffer[i+2] == '<')) 
+      if ((buffer[i] == '<') && (buffer[i+1] == '[') && (buffer[i+2] == '(')) 
       {
         startIndex = i;
         break;
-      }
-      
+      }  
     }
-    for (int i=star
-    tIndex; i < index-2; i++) 
+    if(startIndex>-1)
     {
-      if (buffer[i] == '>' && buffer[i+1] == '>' && buffer[i+2] == '>') 
+      for (int i=startIndex; i < index-2; i++) 
       {
-        stopIndex = i;
+        if (buffer[i] == ')' && buffer[i+1] == ']' && buffer[i+2] == '>') 
+        {
+          stopIndex = i;
+          break;
+        }
       }
     }
     
-    if (startIndex != -1 && stopIndex != -1) 
+    if ( (startIndex != -1) && (stopIndex != -1)) 
     {
       if(stopIndex > startIndex )
       {
-        Serial.println('P');
+        /*
+        Serial.println("--------");
+        for(int i=0;i<index;i++)
+        {
+          Serial.print((char)buffer[i]);
+        }
+        Serial.println(" ");
+        Serial.print("Index:");
+        Serial.println(index);
+        Serial.print("Start:");
+        Serial.println(startIndex);
+        Serial.print("Stop:");
+        Serial.println(stopIndex);
+        */
+        // got packet, update last received!
+        lastReceived = millis();      
+        
         for(int i=0; i<5; i+=1)
         {
           s[i] = buffer[startIndex + 3 + 2*i];
@@ -117,20 +153,23 @@ void loop()
         motor4.set(s[3], d[3]);
         motor0.set(s[4], d[4]);
         
-        int delta = index - stopIndex + 2;
+        int delta = index - (stopIndex + 3);
       
         for(int i=0; i<delta; i++)
         {
-          buffer[startIndex + i] = buffer[stopIndex+3+i];
+          buffer[i] = buffer[stopIndex + 3 + i];
           //buffer[i] = buffer[stopIndex+3+i];
         }
-        index-=16;
-        //index = delta;
-        for(int i = 0; i<index;i++)
+        //index-=16;
+  
+        index = delta;
+        /*
+        for(int i=0;i<index;i++)
         {
           Serial.print((char)buffer[i]);
         }
-        
+        Serial.println(index);
+        */
       }
     } 
   } 
