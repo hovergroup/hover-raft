@@ -229,8 +229,11 @@ while(stopflag==0)
     x=1/2*(xMeas(1,2)+xMeas(1,1))
     y=1/2*(xMeas(3,2)+xMeas(3,1))
     %uOut = raftcontrol(theta);
-    uOut = raftcontrolxy(theta,x,y)
-    
+    if (badData)
+        uOut = uint8(['<';'<';'<';0; 3; 0; 3; 0; 3; 0; 3; 0; 3;'>';'>';'>'])
+    else
+        uOut = raftcontrolxy(theta,x,y)
+    end 
 
 fwrite(s,uint8(uOut));
 
