@@ -1,11 +1,12 @@
-function control = raftcontrol(theta,thetaOld,dt)
+function control = raftcontrol(theta,thetaOld,dt,thetades, thetaError)
 
 %Simple P controller for raft heading, for testing purposes
-thetades=0;
+
 Kp = 1;
 Kd = 0.1;
+Ki = 1;
 thrustmax = pi*Kp;
-thrust = -Kp*(theta-thetades)-Kd*(theta-thetaOld)/dt;
+thrust = -Kp*(theta-thetades)-Kd*(theta-thetaOld)/dt-Ki*thetaError;
 
 %now convert thrust to m1d,m1s,m2d,...,m5s
 m1s = 0;

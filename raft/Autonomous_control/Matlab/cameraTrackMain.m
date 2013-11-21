@@ -110,6 +110,8 @@ stopflag=0;
 packetsStart=tic;
 packNum=0;
 theta = 0;
+thetades = 0;
+thetaError = 0;
 
 % preallocate variables (5 states, column for each vehicle):
 % x_i=[x xdot y ydot theta]'
@@ -255,13 +257,17 @@ while(stopflag==0)
     x=1/2*(A(1)+D(1))
     y=1/2*(A(2)+D(2))
     
+    if thetaError>3
+        thetaError = 3;
+    end
+    thetaError = thetaError + (theta-thetades);
     %uOut = raftcontrol(theta);
     dt = toc(packetsStart)-time;
     if (badData)
         %uOut = uint8(['<';'[';'(';0; 3; 0; 3; 0; 3; 0; 3; 0; 3;')';']';'>'])
     else
         %uOut = raftcontrolxy(theta,x,y)
-         uOut = raftcontrol(theta,thetaOld,dt)
+         uOut = raftcontrol(theta,thetaOld,dt,thetades,thetaError)
     end 
 
 fwrite(s,uint8(uOut));
