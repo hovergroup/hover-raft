@@ -179,13 +179,7 @@ while(stopflag==0)
     xMeas;
     
     %initialization: starting prediction is 1st measurement:
-    if(packNum==1)
-        xOld=xMeas;
-    else
-        % Store previous position estimate
-        xOld=xPlus;
-        %uOld=uOut;
-    end
+
     
     % now, uOld set in groundTruthTrack fcn
     %     if(strcmp(trackMethod,'fullKF'))
@@ -223,20 +217,34 @@ while(stopflag==0)
     % measurement allocation algorithms
     
     
-    % compute control commands to rafts
-    %thetaOld = atan((xOld(3,2)-xOld(3,1))/(xOld(1,2)-xOld(1,1)))
+    % compute control commands to raft
+    thetaOld=0
+    if (packNum>1)
+    thetaOld = atan((xOld(3,2)-xOld(3,1))/(xOld(1,2)-xOld(1,1)))
+    end
+    
     theta = atan((xMeas(3,2)-xMeas(3,1))/(xMeas(1,2)-xMeas(1,1)))
     x=1/2*(xMeas(1,2)+xMeas(1,1))
     y=1/2*(xMeas(3,2)+xMeas(3,1))
+    
     %uOut = raftcontrol(theta);
+    dt = toc(packetsStart)-time;
     if (badData)
         uOut = uint8(['<';'[';'(';0; 3; 0; 3; 0; 3; 0; 3; 0; 3;')';']';'>'])
     else
-        uOut = raftcontrolxy(theta,x,y)
+        %uOut = raftcontrolxy(theta,x,y)
+         uOut = raftcontrol(theta,thetaOld,dt)
     end 
 
 fwrite(s,uint8(uOut));
 
+    if(packNum==1)
+        xOld=xMeas; %store current measurement as xOld for next iteration
+%     else
+%         % Store previous position estimate
+%         xOld=xPlus;
+%         %uOld=uOut;
+    end
     % use this format:
     % +123.12 for x and y thrust (N)
     % fprintf('%+07.2f',a)
@@ -249,7 +257,7 @@ fwrite(s,uint8(uOut));
 %     while((toc(packetsStart)-time)<(loopTime/1000))
 %         %fprintf('%0.3f\n',(toc(packetsStart)-time)) 
 %     end
-    
+
     % look for ESC key - stops script
     key=get(h,'CurrentKey');
     stopflag=isequal(key,'escape');
