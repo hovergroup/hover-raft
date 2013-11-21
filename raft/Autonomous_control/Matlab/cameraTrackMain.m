@@ -117,6 +117,8 @@ xOld=zeros(numStates,numBlobs);
 xMeas=zeros(numStates,numBlobs);
 xPlus=zeros(numStates,numBlobs);
 uOld=zeros(2,numBlobs);
+AOld = zeros(1,2);
+DOld = zeros(1,2);
 
     % send control commands to rafts:
     s = serial('COM5');
@@ -218,14 +220,39 @@ while(stopflag==0)
     
     
     % compute control commands to raft
+    % first compute position and heading of raft  
+    % a,b,d are side lengths, A,B,D are points
+   a = sqrt((xMeas(3,2)-xMeas(3,1))^2+(xOld(1,2)-xOld(1,1))^2);
+   b = sqrt((xMeas(3,2)-xMeas(3,3))^2+(xOld(1,2)-xOld(1,3))^2);
+   d = sqrt((xMeas(3,3)-xMeas(3,1))^2+(xOld(1,3)-xOld(1,1))^2);
+   
+   switch max(a,b,d);
+       case a
+           A = [xMeas(1,3), xMeas(3,3)];
+       case b
+           A = [xMeas(1,1), xMeas(3,1)];
+       case d
+           A = [xMeas(1,2), xMeas(3,2)];
+   end
+   
+   switch min(a,b,d);
+       case a
+           D = [xMeas(1,3), xMeas(3,3)];
+       case b
+           D = [xMeas(1,1), xMeas(3,1)];
+       case d
+           D = [xMeas(1,2), xMeas(3,2)];
+   end
+   
+   
     thetaOld=0
     if (packNum>1)
-    thetaOld = atan((xOld(3,2)-xOld(3,1))/(xOld(1,2)-xOld(1,1)))
+    thetaOld = atan((DOld(2)-AOld(2))/(DOld(1)-AOld(1)))
     end
     
-    theta = atan((xMeas(3,2)-xMeas(3,1))/(xMeas(1,2)-xMeas(1,1)))
-    x=1/2*(xMeas(1,2)+xMeas(1,1))
-    y=1/2*(xMeas(3,2)+xMeas(3,1))
+    theta = atan((D(2)-A(2))/(D(1)-A(1)))
+    x=1/2*(A(1)+D(1))
+    y=1/2*(A(2)+D(2))
     
     %uOut = raftcontrol(theta);
     dt = toc(packetsStart)-time;
@@ -238,13 +265,9 @@ while(stopflag==0)
 
 fwrite(s,uint8(uOut));
 
-    if(packNum==1)
-        xOld=xMeas; %store current measurement as xOld for next iteration
-%     else
-%         % Store previous position estimate
-%         xOld=xPlus;
-%         %uOld=uOut;
-    end
+       AOld = A;
+       DOld = D; %store current measurement as AOld, DOld for next iteration
+
     % use this format:
     % +123.12 for x and y thrust (N)
     % fprintf('%+07.2f',a)
