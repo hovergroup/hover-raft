@@ -31,7 +31,7 @@ print=0;
 % delete log after final plots (use this for testing/debugging)?
 deleteLog=0;
 % number of vehicles to track: (MAKE SURE THIS MATCHES SWISSTRACK)
-numBlobs=2;
+numBlobs=3;
 
 
 %% MORE CONFIG PARAMETERS
@@ -109,6 +109,7 @@ fopen(trackIn);
 stopflag=0;
 packetsStart=tic;
 packNum=0;
+theta = 0;
 
 % preallocate variables (5 states, column for each vehicle):
 % x_i=[x xdot y ydot theta]'
@@ -199,7 +200,7 @@ while(stopflag==0)
         xdot=xPlus(2,i);
         y=xPlus(3,i);
         ydot=xPlus(4,i);
-        theta=xPlus(5,i);
+        alpha=xPlus(5,i);
         
         % log data to text file
 %         fprintf(fid,'num:,%i,time:,%f,ID:,%i,x:,%f,y:,%f,theta:,%f,xdot:,%f,ydot,%f\n',...
@@ -209,7 +210,7 @@ while(stopflag==0)
         
         % plot in real time, check if ESC pressed to stop
         realtimePlotCam(realtimePlotCase,h,ID,xMeas(1,i),xMeas(3,i),...
-            xRes,yRes,numBlobs); 
+            xRes,yRes,numBlobs,theta); 
         %realtimePlotCam(realtimePlotCase,h,ID,x,y,...
         %    xRes,yRes,numBlobs); 
         if(plotTime);dtPlot(k)=toc(plotStart);end
@@ -226,7 +227,7 @@ while(stopflag==0)
    b = sqrt((xMeas(3,2)-xMeas(3,3))^2+(xOld(1,2)-xOld(1,3))^2);
    d = sqrt((xMeas(3,3)-xMeas(3,1))^2+(xOld(1,3)-xOld(1,1))^2);
    
-   switch max(a,b,d);
+   switch max(a,max(b,d));
        case a
            A = [xMeas(1,3), xMeas(3,3)];
        case b
@@ -235,7 +236,7 @@ while(stopflag==0)
            A = [xMeas(1,2), xMeas(3,2)];
    end
    
-   switch min(a,b,d);
+   switch min(a,min(b,d));
        case a
            D = [xMeas(1,3), xMeas(3,3)];
        case b
@@ -247,17 +248,17 @@ while(stopflag==0)
    
     thetaOld=0
     if (packNum>1)
-    thetaOld = atan((DOld(2)-AOld(2))/(DOld(1)-AOld(1)))
+    thetaOld = atan2((DOld(2)-AOld(2)),(DOld(1)-AOld(1)))
     end
     
-    theta = atan((D(2)-A(2))/(D(1)-A(1)))
+    theta = atan2((D(2)-A(2)),(D(1)-A(1)))
     x=1/2*(A(1)+D(1))
     y=1/2*(A(2)+D(2))
     
     %uOut = raftcontrol(theta);
     dt = toc(packetsStart)-time;
     if (badData)
-        uOut = uint8(['<';'[';'(';0; 3; 0; 3; 0; 3; 0; 3; 0; 3;')';']';'>'])
+        %uOut = uint8(['<';'[';'(';0; 3; 0; 3; 0; 3; 0; 3; 0; 3;')';']';'>'])
     else
         %uOut = raftcontrolxy(theta,x,y)
          uOut = raftcontrol(theta,thetaOld,dt)
