@@ -110,6 +110,7 @@ stopflag=0;
 packetsStart=tic;
 packNum=0;
 theta = 0;
+thetaOld=0;
 thetades = pi/2;
 thetaError = 0;
 IError = 0;
@@ -132,14 +133,13 @@ set(s,'ByteOrder','bigEndian');
 
 fopen(s);
 
-
 while(stopflag==0)
     
     time=toc(packetsStart);
     
     % get data from SwissTrack TCP/IP stream
     data=cameraTrackInput(trackIn,numBlobs);
-    [numLines,b]=size(data);
+    [numLines, b]=size(data);
     %if(print);fprintf('\nnew packet: \n');end
     packNum=packNum+1;
     fprintf('\npacket: %i\n',packNum)
@@ -181,9 +181,7 @@ while(stopflag==0)
         %xMeas(:,i)=[xST xdotST yST ydotST thetaST];
         xMeas(:,i)=measOUT(1:5)';
     end
-    
-    xMeas;
-    
+     
     %initialization: starting prediction is 1st measurement:
 
     
@@ -224,11 +222,15 @@ while(stopflag==0)
     
     
     % compute control commands to raft
+    
+    % BEGIN:TODO - move pose computation to dedicated function!
+    % [x, y, theta] = getPose(xMeas);
+    
     % first compute position and heading of raft  
     % a,b,d are side lengths, A,B,D are points
-   a = sqrt((xMeas(3,2)-xMeas(3,1))^2+(xMeas(1,2)-xMeas(1,1))^2)
-   b = sqrt((xMeas(3,2)-xMeas(3,3))^2+(xMeas(1,2)-xMeas(1,3))^2)
-   d = sqrt((xMeas(3,3)-xMeas(3,1))^2+(xMeas(1,3)-xMeas(1,1))^2)
+   a = sqrt((xMeas(3,2)-xMeas(3,1))^2+(xMeas(1,2)-xMeas(1,1))^2);
+   b = sqrt((xMeas(3,2)-xMeas(3,3))^2+(xMeas(1,2)-xMeas(1,3))^2);
+   d = sqrt((xMeas(3,3)-xMeas(3,1))^2+(xMeas(1,3)-xMeas(1,1))^2);
    
    switch max(a,max(b,d));
        case a
@@ -246,21 +248,24 @@ while(stopflag==0)
            D = [xMeas(1,1), xMeas(3,1)];
        case d
            D = [xMeas(1,2), xMeas(3,2)];
-   end
+   end   
    
-   
-    thetaOld=0
-    if (packNum>1)
-    thetaOld = atan2((DOld(2)-AOld(2)),(DOld(1)-AOld(1)))
-    end
-    
-    theta = atan2((D(2)-A(2)),(D(1)-A(1)))
-%     if theta>pi
-%         theta=pi-theta;
+%     thetaOld=0;
+%     if (packNum>1)
+%         thetaOld = atan2((DOld(2)-AOld(2)),(DOld(1)-AOld(1)));
 %     end
 %     
-    x=1/2*(A(1)+D(1))
-    y=1/2*(A(2)+D(2))
+    theta = atan2((D(2)-A(2)),(D(1)-A(1)));
+
+    x = 1/2*(A(1)+D(1));
+    y = 1/2*(A(2)+D(2));
+    
+    %END:TODO
+    
+    % BEGIN TODO: move control computation to dedicated function 
+    % motors = headingControl(theta, theta_desired)
+    % pose = [x y theta];
+    % motors = poseControl(pose, desired_pose);
     thetaError = theta - thetades;
   
     if thetaError>pi
@@ -268,25 +273,32 @@ while(stopflag==0)
     elseif thetaError<-pi
         thetaError = thetaError +2*pi;
     end
-    thetaError
     IError = IError + thetaError;
     
-    if IError>3
+    if IError > 3
         IError = 3;
     end
-    %uOut = raftcontrol(theta);
+    
     dt = toc(packetsStart)-time;
     if (badData) || a>40 || b>40 || d>40 
-        uOut = uint8(['<';'[';'(';0; 0; 0; 0; 0; 0; 0; 0; 0; 0;')';']';'>'])
+        %uOut = uint8(['<';'[';'(';0; 0; 0; 0; 0; 0; 0; 0; 0; 0;')';']';'>']);
+        % hold previous value
+        uOut = raftcontrol(thetaOld,thetaOld,dt,thetades,thetaError,IError);
     else
         %uOut = raftcontrolxy(theta,x,y)
-         uOut = raftcontrol(theta,thetaOld,dt,thetades,thetaError,IError)
+         uOut = raftcontrol(theta,thetaOld,dt,thetades,thetaError,IError);
     end 
+    % END:TODO
+ 
+    % BEGIN: Write function that translates motor signals (assumed -1 to 1)
+    % into a packet that is then sent over the serial port
+    fwrite(s,uint8(uOut));
+    % END:TODO
 
-fwrite(s,uint8(uOut));
-
-       AOld = A;
-       DOld = D; %store current measurement as AOld, DOld for next iteration
+    thetaOld = theta;
+       
+%     AOld = A;
+%     DOld = D; %store current measurement as AOld, DOld for next iteration
 
     % use this format:
     % +123.12 for x and y thrust (N)
@@ -311,7 +323,12 @@ tFinal=toc(packetsStart);
 fclose(s);
 
 %% post-run
+% close serial connection
+flose(s);
+delete(s);
+% close log file
 fclose(fid);
+% close tcp/ip connection
 fclose(trackIn);
 delete(trackIn)
 clear trackIn
@@ -323,7 +340,6 @@ fprintf('av. loop speed: %g [Hz]\n\n',packNum/tFinal)
 % plot final results
 dataFull=readTankCamLog(filename,xRes,yRes);
 
-
 if(plotTime)
     figure
     inds2=find(dtPlot);
@@ -332,10 +348,8 @@ if(plotTime)
     title('realtime plot dt')
 end
 
-
 if(deleteLog)
     delete([filename,'.txt']);
 end
 
 cd(oldFolder)
-
