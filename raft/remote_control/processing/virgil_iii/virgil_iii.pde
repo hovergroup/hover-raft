@@ -11,6 +11,8 @@ Vector<ControllSlider> sliders = new Vector<ControllSlider>();  // 5 sliders
 Vector<ControllButton> buttons = new Vector<ControllButton>();  // 11 buttons
 Vector<String> sliders_names = new Vector<String>();
 Vector<String> buttons_names = new Vector<String>(); //
+Vector<Character> incomingBuffer = new Vector<Character>();
+//String incomingBuffer;
 
 void setup() 
 {
@@ -125,7 +127,7 @@ void draw()
   v[2] = -255*sliders.get(3).getValue();
   v[3] = -255*sliders.get(2).getValue();
   v[4] = 255*sliders.get(4).getValue();
-  println(v);
+  //println(v);
   
   // dead zone (xbox controller has a deadzone of up to 20% of full axis)
   for(int i=0; i<5; i++)
@@ -165,14 +167,16 @@ void draw()
   port.write(packet);
   println("sent:");
   
-  delay(50);  // 20Hz should be fine
+  delay(100);  // 20Hz should be fine
 
   println("received:");
   while (port.available() > 0) 
   {
-    byte inByte = (byte)port.read();
-    print(inByte+" ");
+    incomingBuffer.add((char)port.read());
   }
-  println("");
+  //parse
+  println(incomingBuffer);
+  incomingBuffer.clear();
+  
 }
 
