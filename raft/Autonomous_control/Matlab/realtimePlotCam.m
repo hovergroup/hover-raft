@@ -1,4 +1,4 @@
-function realtimePlotCam(plotCase,h,ID,x,y,xRes,yRes,numBlobs,theta,packNum)
+function realtimePlotCam(plotCase,h,ID,x,y,xRes,yRes,numBlobs,theta,thetaOld,packNum)
 % plots (x,y) positions of blobs in 1-225 tank in real-time (in pixels)
 % uses camera coords aligned with tank
 % inputs:
@@ -55,9 +55,12 @@ switch plotCase
         ylabel('x (window edge) [pixels]')
         xlabel('-y (away from window) [pixels]')
         
+       
         subplot(2,1,2)
         hold on
-        plot(packNum,theta,'d','MarkerSize',4);
+        plot(packNum,(theta-thetaOld)/0.1*(180/pi),'d','MarkerSize',4);
+        xlabel('Packet Number')
+        ylabel('Heading Rate [deg/s]')
         grid on
         
         if(ID==numBlobs)

@@ -19,6 +19,8 @@
 % 3/3/2011 - modified this to tankCamTrack FUNCTION to be used with
 % tankRaftMain script  (stopping development of this fcn - works though)
 
+% fclose(s)
+% delete(s)
 clear all;close all;clc;
 format compact;
 
@@ -114,6 +116,8 @@ thetaOld=0;
 thetades = pi/2;
 thetaError = 0;
 IError = 0;
+thetadotsave = zeros(1,1e3);
+thetasave = zeros(1,1e3);
 
 % preallocate variables (5 states, column for each vehicle):
 % x_i=[x xdot y ydot theta]'
@@ -124,6 +128,7 @@ xPlus=zeros(numStates,numBlobs);
 uOld=zeros(2,numBlobs);
 AOld = zeros(1,2);
 DOld = zeros(1,2);
+
 
     % send control commands to rafts:
     s = serial('COM5');
@@ -194,30 +199,6 @@ while(stopflag==0)
     % Tracking:
 %     xPlus=groundTruthTrack(xOld,uOld,xMeas,trackMethod,KFmodel) %EWG comment
     
-    % log and plot updated positions:
-    for i=1:numBlobs
-        ID=i;               % keep vehicles ordered
-        x=xPlus(1,i);
-        xdot=xPlus(2,i);
-        y=xPlus(3,i);
-        ydot=xPlus(4,i);
-        alpha=xPlus(5,i);
-        
-        % log data to text file
-%         fprintf(fid,'num:,%i,time:,%f,ID:,%i,x:,%f,y:,%f,theta:,%f,xdot:,%f,ydot,%f\n',...
-%             packNum,time,ID,x,y,theta,xdot,ydot);
-%         
-        if(plotTime);plotStart=tic;k=k+1;end
-        
-        % plot in real time, check if ESC pressed to stop
-        realtimePlotCam(realtimePlotCase,h,ID,xMeas(1,i),xMeas(3,i),...
-            xRes,yRes,numBlobs,theta,packNum); 
-        %realtimePlotCam(realtimePlotCase,h,ID,x,y,...
-        %    xRes,yRes,numBlobs); 
-        if(plotTime);dtPlot(k)=toc(plotStart);end
-        
-    end
-    
     % measurement allocation algorithms
     
     
@@ -256,10 +237,10 @@ while(stopflag==0)
 %     end
 %     
     theta = atan2((D(2)-A(2)),(D(1)-A(1)));
-
     x = 1/2*(A(1)+D(1));
     y = 1/2*(A(2)+D(2));
-    
+    thetadotsave(1,packNum) = (theta-thetaOld)/0.1;
+    thetasave(1,packNum) = theta;
     %END:TODO
     
     % BEGIN TODO: move control computation to dedicated function 
@@ -295,6 +276,30 @@ while(stopflag==0)
     fwrite(s,uint8(uOut));
     % END:TODO
 
+        % log and plot updated positions:
+    for i=1:numBlobs
+        ID=i;               % keep vehicles ordered
+        x=xPlus(1,i);
+        xdot=xPlus(2,i);
+        y=xPlus(3,i);
+        ydot=xPlus(4,i);
+        alpha=xPlus(5,i);
+        
+        % log data to text file
+%         fprintf(fid,'num:,%i,time:,%f,ID:,%i,x:,%f,y:,%f,theta:,%f,xdot:,%f,ydot,%f\n',...
+%             packNum,time,ID,x,y,theta,xdot,ydot);
+%         
+        if(plotTime);plotStart=tic;k=k+1;end
+        
+        % plot in real time, check if ESC pressed to stop
+        realtimePlotCam(realtimePlotCase,h,ID,xMeas(1,i),xMeas(3,i),...
+            xRes,yRes,numBlobs,theta,thetaOld,packNum); 
+        %realtimePlotCam(realtimePlotCase,h,ID,x,y,...
+        %    xRes,yRes,numBlobs); 
+        if(plotTime);dtPlot(k)=toc(plotStart);end
+        
+    end
+    
     thetaOld = theta;
        
 %     AOld = A;
