@@ -140,8 +140,8 @@ void draw()
   byte[] packet = new byte[16];
   // header
   packet[0] = '<';
-  packet[1] = '<';
-  packet[2] = '<';
+  packet[1] = '[';
+  packet[2] = '(';
   // payload
   for(int i = 0; i<5; i++)
   {
@@ -158,8 +158,8 @@ void draw()
 
   }
   // footer
-  packet[13] = '>';
-  packet[14] = '>';
+  packet[13] = ')';
+  packet[14] = ']';
   packet[15] = '>';
   
   port.write(packet);
