@@ -1,4 +1,4 @@
-function realtimePlotCam(plotCase,h,ID,x,y,xRes,yRes,numBlobs,theta)
+function realtimePlotCam(plotCase,h,ID,x,y,xRes,yRes,numBlobs,theta,packNum)
 % plots (x,y) positions of blobs in 1-225 tank in real-time (in pixels)
 % uses camera coords aligned with tank
 % inputs:
@@ -45,7 +45,7 @@ switch plotCase
         %nothing
 % plots newest updates (holds one set of vehicle positions)
     case 'new'
-        %subplot(2,1,1)
+        subplot(2,1,1)
         plot(-y,x,'d','MarkerSize',10,'MarkerFaceColor',...
             colorlist{ID});
         axis equal
@@ -55,8 +55,10 @@ switch plotCase
         ylabel('x (window edge) [pixels]')
         xlabel('-y (away from window) [pixels]')
         
-        %subplot(2,1,2)
-        %plot(1,theta);
+        subplot(2,1,2)
+        hold on
+        plot(packNum,theta,'d','MarkerSize',4);
+        grid on
         
         if(ID==numBlobs)
             hold off

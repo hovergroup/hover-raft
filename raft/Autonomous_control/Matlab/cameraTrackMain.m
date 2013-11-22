@@ -110,8 +110,9 @@ stopflag=0;
 packetsStart=tic;
 packNum=0;
 theta = 0;
-thetades = 0;
+thetades = pi/2;
 thetaError = 0;
+IError = 0;
 
 % preallocate variables (5 states, column for each vehicle):
 % x_i=[x xdot y ydot theta]'
@@ -212,7 +213,7 @@ while(stopflag==0)
         
         % plot in real time, check if ESC pressed to stop
         realtimePlotCam(realtimePlotCase,h,ID,xMeas(1,i),xMeas(3,i),...
-            xRes,yRes,numBlobs,theta); 
+            xRes,yRes,numBlobs,theta,packNum); 
         %realtimePlotCam(realtimePlotCase,h,ID,x,y,...
         %    xRes,yRes,numBlobs); 
         if(plotTime);dtPlot(k)=toc(plotStart);end
@@ -225,9 +226,9 @@ while(stopflag==0)
     % compute control commands to raft
     % first compute position and heading of raft  
     % a,b,d are side lengths, A,B,D are points
-   a = sqrt((xMeas(3,2)-xMeas(3,1))^2+(xOld(1,2)-xOld(1,1))^2);
-   b = sqrt((xMeas(3,2)-xMeas(3,3))^2+(xOld(1,2)-xOld(1,3))^2);
-   d = sqrt((xMeas(3,3)-xMeas(3,1))^2+(xOld(1,3)-xOld(1,1))^2);
+   a = sqrt((xMeas(3,2)-xMeas(3,1))^2+(xMeas(1,2)-xMeas(1,1))^2)
+   b = sqrt((xMeas(3,2)-xMeas(3,3))^2+(xMeas(1,2)-xMeas(1,3))^2)
+   d = sqrt((xMeas(3,3)-xMeas(3,1))^2+(xMeas(1,3)-xMeas(1,1))^2)
    
    switch max(a,max(b,d));
        case a
@@ -254,20 +255,32 @@ while(stopflag==0)
     end
     
     theta = atan2((D(2)-A(2)),(D(1)-A(1)))
+%     if theta>pi
+%         theta=pi-theta;
+%     end
+%     
     x=1/2*(A(1)+D(1))
     y=1/2*(A(2)+D(2))
-    
-    if thetaError>3
-        thetaError = 3;
+    thetaError = theta - thetades;
+  
+    if thetaError>pi
+        thetaError = thetaError -2*pi;
+    elseif thetaError<-pi
+        thetaError = thetaError +2*pi;
     end
-    thetaError = thetaError + (theta-thetades);
+    thetaError
+    IError = IError + thetaError;
+    
+    if IError>3
+        IError = 3;
+    end
     %uOut = raftcontrol(theta);
     dt = toc(packetsStart)-time;
-    if (badData)
-        %uOut = uint8(['<';'[';'(';0; 3; 0; 3; 0; 3; 0; 3; 0; 3;')';']';'>'])
+    if (badData) || a>40 || b>40 || d>40 
+        uOut = uint8(['<';'[';'(';0; 0; 0; 0; 0; 0; 0; 0; 0; 0;')';']';'>'])
     else
         %uOut = raftcontrolxy(theta,x,y)
-         uOut = raftcontrol(theta,thetaOld,dt,thetades,thetaError)
+         uOut = raftcontrol(theta,thetaOld,dt,thetades,thetaError,IError)
     end 
 
 fwrite(s,uint8(uOut));
