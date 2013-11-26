@@ -23,7 +23,7 @@ void setup()
 
   println(Serial.list());
   
-  port = new Serial(this, Serial.list()[1], 9600);
+  port = new Serial(this, Serial.list()[1], 57600);
   
   controll = ControllIO.getInstance(this);
   controller = controll.getDevice("Controller (Xbox 360 Wireless Receiver for Windows)");
@@ -48,7 +48,7 @@ void setup()
   // 0 - A
   // 1 - B
   // 2 - X
-  // 3 - Y
+  // 3 - Y``
   // 4 - LB
   // 5 - RB
   // 6 - Back
@@ -165,18 +165,22 @@ void draw()
   packet[15] = '>';
   
   port.write(packet);
-  println("sent:");
   
-  delay(100);  // 20Hz should be fine
+  //delay(100);  // 20Hz should be fine
 
-  println("received:");
+  print(second());
+  print('.');
+  print(millis());
+  println(':');
+  
   while (port.available() > 0) 
   {
     incomingBuffer.add((char)port.read());
   }
   //parse
   println(incomingBuffer);
-  incomingBuffer.clear();
-  
+  incomingBuffer.clear(); 
+ 
+ delay(100); 
 }
 
