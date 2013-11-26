@@ -27,14 +27,14 @@ end
 % m5s = 0;
 % m5d = 0;
 
-m1s = 255;
+m1s = 0;
 %m1s = floor(thrust/thrustmax*255);
 m1d = 3;
-m2s = 255;
+m2s = 0;
 m2d = 1;
-m3s = 255;
+m3s = 0;
 m3d = 3;
-m4s = 255;
+m4s = 0;
 m4d = 1;
 m5s = 0;
 m5d = 0;

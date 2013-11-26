@@ -112,12 +112,17 @@ stopflag=0;
 packetsStart=tic;
 packNum=0;
 theta = 0;
+roll = 0;
+pitch = 0;
+heading = 0;
 thetaOld=0;
+thetablobs=0;
 thetades = pi/2;
 thetaError = 0;
 IError = 0;
 thetadotsave = zeros(1,1e3);
 thetasave = zeros(1,1e3);
+thetablobsave = zeros(1,1e3);
 
 % preallocate variables (5 states, column for each vehicle):
 % x_i=[x xdot y ydot theta]'
@@ -134,6 +139,9 @@ DOld = zeros(1,2);
     s = serial('COM5');
 set(s,'BaudRate',9600);
 set(s,'ByteOrder','bigEndian');
+
+data2 = [];
+
 %get(s);
 
 fopen(s);
@@ -236,11 +244,76 @@ while(stopflag==0)
 %         thetaOld = atan2((DOld(2)-AOld(2)),(DOld(1)-AOld(1)));
 %     end
 %     
-    theta = atan2((D(2)-A(2)),(D(1)-A(1)));
+
+%read heading data from serial port
+    if(s.BytesAvailable>0)
+        data2 = [data2; fread(s,s.BytesAvailable,'uint8')];
+    end
+    
+    if(length(data2)>=27)
+       iR = find(char(data2)=='R', 1, 'last')
+       iP = find(char(data2)=='P', 1, 'last')
+       iH = find(char(data2)=='H', 1, 'last')
+       
+       if length(data2)-iR < 9
+           iR2 = find(char(data2)=='R', 2, 'last')
+           iR = iR2(1)
+       end
+       if length(data2)-iP < 9
+           iP2 = find(char(data2)=='P', 2, 'last')
+           iP = iP2(1)
+       end
+       if length(data2)-iH < 9
+           iH2 = find(char(data2)=='H', 2, 'last')
+           iH = iH2(1)
+       end
+       
+       if (iR~=0 && iP~=0 && iH~=0)
+          iRe = find(char(data2(iR:end))=='!', 1, 'first')
+          iPe = find(char(data2(iP:end))=='!', 1, 'first')
+          iHe = find(char(data2(iH:end))=='!', 1, 'first')
+          
+          if (~isempty(iRe) && ~isempty(iPe) && ~isempty(iHe))
+            r = data2(iR+2:iR+iRe)
+            p = data2(iP+2:iP+iPe)
+            head = data2(iH+2:iH+iHe)
+            
+            rsum=0;
+            psum=0;
+            hsum=0;
+%             for i=iR-4:iR-3
+%                 rsum = rsum+str2num(char(r(i)));
+%             end
+%             for i=iP-4:iP-3
+%                 psum = psum+str2num(char(p(i)));
+%             end
+            for i=1:iHe-6
+                hsum = hsum+str2num(char(head(i)))*10^(iHe-6-i);
+            end
+              head2 = hsum + str2num(char(head(iHe-4)))*10^(-1)+str2num(char(head(iHe-3)))*10^(-2);
+%             roll = str2num(char(r(1)))+str2num(char(r(3)))*(1e-1)+str2num(char(r(4)))*(1e-2);
+%             pitch = str2num(char(p(2)))*(10)+str2num(char(p(3)))+str2num(char(p(5)))*(1e-1)+str2num(char(p(6)))*(1e-2);
+%             head2 = str2num(char(head(1)))*(1e2)+str2num(char(head(2)))*(10)+str2num(char(head(3)))+str2num(char(head(5)))*(1e-1)+str2num(char(head(6)))*(1e-2);
+             heading = 180-head2-18; %heading offset of 18 degrees to make consistent with tank coords
+            
+%             disp(['roll: ', num2str(roll)]);
+%             disp(['pitch: ', num2str(pitch)]);
+            disp(['heading: ', num2str(heading)]);
+            
+            data2 = [];
+          end      
+      end        
+    end
+
+    thetablobs = atan2((D(2)-A(2)),(D(1)-A(1)));
+    theta = heading*pi/180;
+    
     x = 1/2*(A(1)+D(1));
     y = 1/2*(A(2)+D(2));
     thetadotsave(1,packNum) = (theta-thetaOld)/0.1;
     thetasave(1,packNum) = theta;
+    thetablobsave(1,packNum) = thetablobs;
+    
     %END:TODO
     
     % BEGIN TODO: move control computation to dedicated function 
