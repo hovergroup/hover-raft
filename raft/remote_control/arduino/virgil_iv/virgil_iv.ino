@@ -22,22 +22,22 @@ int unreadSize=0;
 
 float heading,roll,pitch;
 
+long cycleTime = 0;
+unsigned long cycleStart = 0;
 unsigned long lastReceived = 0;  // safety: kill all motors if no packet is received in more than one second
-
+const unsigned long cyclePeriod = 10;
 void setup()  
 { 
   digitalWrite(13, HIGH);
-  delay(1000);
+  delay(10000);
   
-  Serial.begin(9600);
-  
+  Serial.begin(115200);
   Serial.println("Serial 1 ready.");
   
   delay(10);
-  Serial3.begin(9600);
+  Serial3.begin(57600);
   Serial.println("Serial 3 ready.");
   delay(1000);
-  
   Serial.println("testing motors - CW");
   motor0.set(100, 1);
   motor1.set(100, 1);
@@ -61,14 +61,27 @@ void setup()
   motor3.set(0, 0);
   motor4.set(0, 0);
   
+  Serial.println("Testing compass");
+  
+     compass.readHeading(heading, roll, pitch);
+        
+     Serial.print("Heading: ");
+     Serial.println(heading);
+     Serial.print("Roll: ");
+     Serial.println(roll);
+     Serial.print("Pitch: ");
+     Serial.println(pitch);
+  
   Serial.println("Setup complete");
     digitalWrite(13, LOW);
 } 
 
 void loop()  
-{ 
-  unreadSize = Serial3.available();
-  
+{   
+  cycleStart = millis();
+//  Serial.print(millis());
+//  Serial.print(": ");
+//  Serial.println(index);
   if(millis() - lastReceived > 500)
   {
     motor0.set(0, 0);
@@ -78,28 +91,24 @@ void loop()
     motor4.set(0, 0);
   }
   
+  unreadSize = Serial3.available();
+  
   if(unreadSize>0)
   {
-    /*
-    Serial.print("Got ");
-    Serial.print(unreadSize);
-    Serial.println(" bytes:");
-    */
     if(index + unreadSize > 127)
     {
-      Serial.println("Buffer overflow!");
+      Serial.print('*');
       index = 0; 
     }
     
     for(int i = 0; i < unreadSize; i++)
     {
       buffer[index + i] = (byte)Serial3.read();
-      //Serial.print((char)buffer[index+i]);
     }
     index = index + unreadSize;
   }
 
-  if(index > 16)
+  if(index > 15)
   {
     int startIndex=-1; 
     int stopIndex=-1;
@@ -129,20 +138,6 @@ void loop()
     {
       if(stopIndex > startIndex )
       {
-        /*
-        Serial.println("--------");
-        for(int i=0;i<index;i++)
-        {
-          Serial.print((char)buffer[i]);
-        }
-        Serial.println(" ");
-        Serial.print("Index:");
-        Serial.println(index);
-        Serial.print("Start:");
-        Serial.println(startIndex);
-        Serial.print("Stop:");
-        Serial.println(stopIndex);
-        */
         // got packet, update last received!
         lastReceived = millis();      
         
@@ -163,33 +158,36 @@ void loop()
         for(int i=0; i<delta; i++)
         {
           buffer[i] = buffer[stopIndex + 3 + i];
-          //buffer[i] = buffer[stopIndex+3+i];
         }
-        //index-=16;
-  
-        index = delta;
-        
-        // reply!
-        
-        compass.readHeading(heading, roll, pitch);
-        
-        Serial3.print("!H:");
-        Serial3.print(heading);
-        Serial3.print("!R:");
-        Serial3.print(roll);
-        Serial3.print("!P:");
-        Serial3.print(pitch);
-        /*
-        for(int i=0;i<index;i++)
-        {
-          Serial.print((char)buffer[i]);
-        }
-        Serial.println(index);
-        */
+        index = delta;            
       }
     } 
   } 
- delay(10); 
+  
+  compass.readHeading(heading, roll, pitch);      
+      
+  Serial3.print("H:");
+  Serial3.print(heading);
+  Serial3.print("!R:");
+  Serial3.print(roll);
+  Serial3.print("!P:");
+  Serial3.print(pitch);
+  Serial3.print('!');
+  
+  cycleTime = millis() - cycleStart;
+  if (cycleTime < 0)
+  {
+    //handle rollover!
+  }
+  else if ( cycleTime < cyclePeriod )
+  {
+    delay(cyclePeriod - cycleTime);  
+    //Serial.println(cycleTime);
+  }
+  else
+  {
+    Serial.print('!'); // missed deadline!
+  }
 }
 
 
