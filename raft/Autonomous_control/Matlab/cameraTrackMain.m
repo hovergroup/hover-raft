@@ -93,7 +93,7 @@ if(plotTime);dtPlot=zeros(1,10000);k=0;end
 
 % init log files: filename is date and time - input to fcn is prefix
 % ground-truth tracking log:
-[fid,filename]=constructFile('GroundTruth');
+% [fid,filename]=constructFile('GroundTruth');
 
 % SwissTrack TCP/IP communication:
 trackIn=tcpip('localhost',TCPIPPort);
@@ -117,12 +117,14 @@ pitch = 0;
 heading = 0;
 thetaOld=0;
 thetablobs=0;
-thetades = pi/2;
+thetablobsOld=0;
+thetades = 90;
 thetaError = 0;
 IError = 0;
 thetadotsave = zeros(1,1e3);
 thetasave = zeros(1,1e3);
 thetablobsave = zeros(1,1e3);
+timevec=zeros(1,1e3);
 
 % preallocate variables (5 states, column for each vehicle):
 % x_i=[x xdot y ydot theta]'
@@ -135,12 +137,11 @@ AOld = zeros(1,2);
 DOld = zeros(1,2);
 
 
-    % send control commands to rafts:
-    s = serial('COM5');
-set(s,'BaudRate',9600);
+% send control commands to rafts:
+s = serial('COM5');
+set(s,'BaudRate', 57600);
 set(s,'ByteOrder','bigEndian');
-
-data2 = [];
+serialData = [];
 
 %get(s);
 
@@ -196,7 +197,6 @@ while(stopflag==0)
     end
      
     %initialization: starting prediction is 1st measurement:
-
     
     % now, uOld set in groundTruthTrack fcn
     %     if(strcmp(trackMethod,'fullKF'))
@@ -205,115 +205,106 @@ while(stopflag==0)
     %     end
     
     % Tracking:
-%     xPlus=groundTruthTrack(xOld,uOld,xMeas,trackMethod,KFmodel) %EWG comment
+    % xPlus=groundTruthTrack(xOld,uOld,xMeas,trackMethod,KFmodel) %EWG comment
     
     % measurement allocation algorithms
     
     
     % compute control commands to raft
-    
-    % BEGIN:TODO - move pose computation to dedicated function!
-    % [x, y, theta] = getPose(xMeas);
-    
-    % first compute position and heading of raft  
-    % a,b,d are side lengths, A,B,D are points
-   a = sqrt((xMeas(3,2)-xMeas(3,1))^2+(xMeas(1,2)-xMeas(1,1))^2);
-   b = sqrt((xMeas(3,2)-xMeas(3,3))^2+(xMeas(1,2)-xMeas(1,3))^2);
-   d = sqrt((xMeas(3,3)-xMeas(3,1))^2+(xMeas(1,3)-xMeas(1,1))^2);
-   
-   switch max(a,max(b,d));
-       case a
-           A = [xMeas(1,3), xMeas(3,3)];
-       case b
-           A = [xMeas(1,1), xMeas(3,1)];
-       case d
-           A = [xMeas(1,2), xMeas(3,2)];
-   end
-   
-   switch min(a,min(b,d));
-       case a
-           D = [xMeas(1,3), xMeas(3,3)];
-       case b
-           D = [xMeas(1,1), xMeas(3,1)];
-       case d
-           D = [xMeas(1,2), xMeas(3,2)];
-   end   
-   
-%     thetaOld=0;
-%     if (packNum>1)
-%         thetaOld = atan2((DOld(2)-AOld(2)),(DOld(1)-AOld(1)));
-%     end
-%     
+    pose = getPoseFromBlobs(xMeas);
+    x = pose(1);
+    y = pose(2);
+    thetablobs = pose(3)*180/pi;
+%discard outlier points
+if abs(thetablobs-thetablobsOld)>40 && thetablobsOld~=0 && abs(thetablobs-thetablobsOld)<300
+    thetablobs = thetablobsOld;
+end
 
-%read heading data from serial port
     if(s.BytesAvailable>0)
-        data2 = [data2; fread(s,s.BytesAvailable,'uint8')];
+        serialData = [serialData; fread(s,s.BytesAvailable,'uint8')];
     end
     
-    if(length(data2)>=27)
-       iR = find(char(data2)=='R', 1, 'last')
-       iP = find(char(data2)=='P', 1, 'last')
-       iH = find(char(data2)=='H', 1, 'last')
-       
-       if length(data2)-iR < 9
-           iR2 = find(char(data2)=='R', 2, 'last')
-           iR = iR2(1)
-       end
-       if length(data2)-iP < 9
-           iP2 = find(char(data2)=='P', 2, 'last')
-           iP = iP2(1)
-       end
-       if length(data2)-iH < 9
-           iH2 = find(char(data2)=='H', 2, 'last')
-           iH = iH2(1)
-       end
-       
-       if (iR~=0 && iP~=0 && iH~=0)
-          iRe = find(char(data2(iR:end))=='!', 1, 'first')
-          iPe = find(char(data2(iP:end))=='!', 1, 'first')
-          iHe = find(char(data2(iH:end))=='!', 1, 'first')
-          
-          if (~isempty(iRe) && ~isempty(iPe) && ~isempty(iHe))
-            r = data2(iR+2:iR+iRe)
-            p = data2(iP+2:iP+iPe)
-            head = data2(iH+2:iH+iHe)
-            
-            rsum=0;
-            psum=0;
-            hsum=0;
-%             for i=iR-4:iR-3
-%                 rsum = rsum+str2num(char(r(i)));
+    %todo: [success, roll, pitch, yaw] = parseRaftData(serialData);
+ %------------------------------------------------------------------------------------------   
+%     if(length(serialData)>=27)
+%        % look for the last (latest) tuple of measurements 
+%        indexRoll = find(char(serialData)=='R', 1, 'last');
+%        indexPitch = find(char(serialData)=='P', 1, 'last');
+%        indexHeading = find(char(serialData)=='H', 1, 'last');
+%        
+%        if length(serialData)-indexRoll < 9
+%            indexRoll2 = find(char(serialData)=='R', 2, 'last')
+%            indexRoll = indexRoll2(1)
+%        end
+%        
+%        if length(serialData)-indexPitch < 9
+%            iP2 = find(char(serialData)=='P', 2, 'last')
+%            indexPitch = iP2(1)
+%        end
+%        
+%        if length(serialData)-indexHeading < 9
+%            iH2 = find(char(serialData)=='H', 2, 'last')
+%            indexHeading = iH2(1)
+%        end
+%        
+%        if (~isempty(indexRoll) && ~isempty(indexPitch) && ~isempty(indexHeading))
+%           iRe = find(char(serialData(indexRoll:end))=='!', 1, 'first')
+%           iPe = find(char(serialData(indexPitch:end))=='!', 1, 'first')
+%           iHe = find(char(serialData(indexHeading:end))=='!', 1, 'first')
+%           
+%           if (~isempty(iRe) && ~isempty(iPe) && ~isempty(iHe))
+%             %roll = serial
+%               
+%               r = serialData(indexRoll+2:indexRoll+iRe)
+%             p = serialData(indexPitch+2:indexPitch+iPe)
+%             head = serialData(indexHeading+2:indexHeading+iHe)
+%             char(head)
+%             % wat
+%             
+%             rsum=0;
+%             psum=0;
+%             hsum=0;
+% %             for i=indexRoll-4:indexRoll-3
+% %                 rsum = rsum+str2num(char(r(i)));
+% %             end
+% %             for i=iP-4:iP-3
+% %                 psum = psum+str2num(char(p(i)));
+% %             end
+%             for i=1:iHe-6
+%                 hsum = hsum+str2num(char(head(i)))*10^(iHe-6-i);
 %             end
-%             for i=iP-4:iP-3
-%                 psum = psum+str2num(char(p(i)));
-%             end
-            for i=1:iHe-6
-                hsum = hsum+str2num(char(head(i)))*10^(iHe-6-i);
-            end
-              head2 = hsum + str2num(char(head(iHe-4)))*10^(-1)+str2num(char(head(iHe-3)))*10^(-2);
-%             roll = str2num(char(r(1)))+str2num(char(r(3)))*(1e-1)+str2num(char(r(4)))*(1e-2);
-%             pitch = str2num(char(p(2)))*(10)+str2num(char(p(3)))+str2num(char(p(5)))*(1e-1)+str2num(char(p(6)))*(1e-2);
-%             head2 = str2num(char(head(1)))*(1e2)+str2num(char(head(2)))*(10)+str2num(char(head(3)))+str2num(char(head(5)))*(1e-1)+str2num(char(head(6)))*(1e-2);
-             heading = 180-head2-18; %heading offset of 18 degrees to make consistent with tank coords
-            
-%             disp(['roll: ', num2str(roll)]);
-%             disp(['pitch: ', num2str(pitch)]);
-            disp(['heading: ', num2str(heading)]);
-            
-            data2 = [];
-          end      
-      end        
-    end
-
-    thetablobs = atan2((D(2)-A(2)),(D(1)-A(1)));
-    theta = heading*pi/180;
-    
-    x = 1/2*(A(1)+D(1));
-    y = 1/2*(A(2)+D(2));
-    thetadotsave(1,packNum) = (theta-thetaOld)/0.1;
+%               head2 = hsum + str2num(char(head(iHe-4)))*10^(-1)+str2num(char(head(iHe-3)))*10^(-2);
+% %             roll = str2num(char(r(1)))+str2num(char(r(3)))*(1e-1)+str2num(char(r(4)))*(1e-2);
+% %             pitch = str2num(char(p(2)))*(10)+str2num(char(p(3)))+str2num(char(p(5)))*(1e-1)+str2num(char(p(6)))*(1e-2);
+% %             head2 = str2num(char(head(1)))*(1e2)+str2num(char(head(2)))*(10)+str2num(char(head(3)))+str2num(char(head(5)))*(1e-1)+str2num(char(head(6)))*(1e-2);
+%              head3 = 180-head2-28; %heading offset of 18 degrees to make consistent with tank coords
+% %              heading = head2;
+%              if head3<0
+%                  heading = head3*175/195;
+%              else
+%                  heading = head3*177/147;
+%              end
+%              if heading>180
+%                  heading = 360-heading;
+%              end
+%              
+% %             disp(['roll: ', num2str(roll)]);
+% %             disp(['pitch: ', num2str(pitch)]);
+%             disp(['heading: ', num2str(heading)]);
+%             
+%             serialData = [];
+%           end      
+%       end        
+%     end
+% 
+%     theta = heading;
+%--------------------------------------------------------------------------------------------
+theta=thetablobs;    
+thetadotsave(1,packNum) = (theta-thetaOld)/0.1;
     thetasave(1,packNum) = theta;
     thetablobsave(1,packNum) = thetablobs;
-    
+   dt = toc(packetsStart)-time;
+   timevec(1,packNum) = toc(packetsStart);
     %END:TODO
     
     % BEGIN TODO: move control computation to dedicated function 
@@ -333,8 +324,8 @@ while(stopflag==0)
         IError = 3;
     end
     
-    dt = toc(packetsStart)-time;
-    if (badData) || a>40 || b>40 || d>40 
+   
+    if (badData) %|| a>40 || b>40 || d>40 
         %uOut = uint8(['<';'[';'(';0; 0; 0; 0; 0; 0; 0; 0; 0; 0;')';']';'>']);
         % hold previous value
         uOut = raftcontrol(thetaOld,thetaOld,dt,thetades,thetaError,IError);
@@ -374,7 +365,7 @@ while(stopflag==0)
     end
     
     thetaOld = theta;
-       
+    thetablobsOld = thetablobs;   
 %     AOld = A;
 %     DOld = D; %store current measurement as AOld, DOld for next iteration
 

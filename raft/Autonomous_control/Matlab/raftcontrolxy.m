@@ -2,7 +2,7 @@ function control = raftcontrolxy(theta,x,y)
 
 %Simple P controller for raft xy, for testing purposes
 xdes = 200;
-ydes = 2000;
+ydes = 300;
 thetades=0;
 
 Kp = 0.01;
