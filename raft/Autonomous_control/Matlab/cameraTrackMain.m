@@ -119,22 +119,27 @@ thetaOld=0;
 thetablobs=0;
 thetablobsOld=0;
 thetades = 90;
+xdes = 300;
+ydes = 300;
+
 thetaError = 0;
 IError = 0;
 thetadotsave = zeros(1,1e3);
 thetasave = zeros(1,1e3);
 thetablobsave = zeros(1,1e3);
+xsave = zeros(1,1e3);
+ysave = zeros(1,1e3);
 timevec=zeros(1,1e3);
 
 % preallocate variables (5 states, column for each vehicle):
 % x_i=[x xdot y ydot theta]'
 numStates=5;
-xOld=zeros(numStates,numBlobs);
+% xOld=zeros(numStates,numBlobs);
 xMeas=zeros(numStates,numBlobs);
 xPlus=zeros(numStates,numBlobs);
 uOld=zeros(2,numBlobs);
-AOld = zeros(1,2);
-DOld = zeros(1,2);
+xOld = 0;
+yOld = 0;
 
 
 % send control commands to rafts:
@@ -219,90 +224,24 @@ while(stopflag==0)
 if abs(thetablobs-thetablobsOld)>40 && thetablobsOld~=0 && abs(thetablobs-thetablobsOld)<300
     thetablobs = thetablobsOld;
 end
+if abs(x-xOld)>50 && xOld~=0
+    x=xOld;
+    y=yOld;
+end
+
 
     if(s.BytesAvailable>0)
         serialData = [serialData; fread(s,s.BytesAvailable,'uint8')];
     end
     
     %todo: [success, roll, pitch, yaw] = parseRaftData(serialData);
- %------------------------------------------------------------------------------------------   
-%     if(length(serialData)>=27)
-%        % look for the last (latest) tuple of measurements 
-%        indexRoll = find(char(serialData)=='R', 1, 'last');
-%        indexPitch = find(char(serialData)=='P', 1, 'last');
-%        indexHeading = find(char(serialData)=='H', 1, 'last');
-%        
-%        if length(serialData)-indexRoll < 9
-%            indexRoll2 = find(char(serialData)=='R', 2, 'last')
-%            indexRoll = indexRoll2(1)
-%        end
-%        
-%        if length(serialData)-indexPitch < 9
-%            iP2 = find(char(serialData)=='P', 2, 'last')
-%            indexPitch = iP2(1)
-%        end
-%        
-%        if length(serialData)-indexHeading < 9
-%            iH2 = find(char(serialData)=='H', 2, 'last')
-%            indexHeading = iH2(1)
-%        end
-%        
-%        if (~isempty(indexRoll) && ~isempty(indexPitch) && ~isempty(indexHeading))
-%           iRe = find(char(serialData(indexRoll:end))=='!', 1, 'first')
-%           iPe = find(char(serialData(indexPitch:end))=='!', 1, 'first')
-%           iHe = find(char(serialData(indexHeading:end))=='!', 1, 'first')
-%           
-%           if (~isempty(iRe) && ~isempty(iPe) && ~isempty(iHe))
-%             %roll = serial
-%               
-%               r = serialData(indexRoll+2:indexRoll+iRe)
-%             p = serialData(indexPitch+2:indexPitch+iPe)
-%             head = serialData(indexHeading+2:indexHeading+iHe)
-%             char(head)
-%             % wat
-%             
-%             rsum=0;
-%             psum=0;
-%             hsum=0;
-% %             for i=indexRoll-4:indexRoll-3
-% %                 rsum = rsum+str2num(char(r(i)));
-% %             end
-% %             for i=iP-4:iP-3
-% %                 psum = psum+str2num(char(p(i)));
-% %             end
-%             for i=1:iHe-6
-%                 hsum = hsum+str2num(char(head(i)))*10^(iHe-6-i);
-%             end
-%               head2 = hsum + str2num(char(head(iHe-4)))*10^(-1)+str2num(char(head(iHe-3)))*10^(-2);
-% %             roll = str2num(char(r(1)))+str2num(char(r(3)))*(1e-1)+str2num(char(r(4)))*(1e-2);
-% %             pitch = str2num(char(p(2)))*(10)+str2num(char(p(3)))+str2num(char(p(5)))*(1e-1)+str2num(char(p(6)))*(1e-2);
-% %             head2 = str2num(char(head(1)))*(1e2)+str2num(char(head(2)))*(10)+str2num(char(head(3)))+str2num(char(head(5)))*(1e-1)+str2num(char(head(6)))*(1e-2);
-%              head3 = 180-head2-28; %heading offset of 18 degrees to make consistent with tank coords
-% %              heading = head2;
-%              if head3<0
-%                  heading = head3*175/195;
-%              else
-%                  heading = head3*177/147;
-%              end
-%              if heading>180
-%                  heading = 360-heading;
-%              end
-%              
-% %             disp(['roll: ', num2str(roll)]);
-% %             disp(['pitch: ', num2str(pitch)]);
-%             disp(['heading: ', num2str(heading)]);
-%             
-%             serialData = [];
-%           end      
-%       end        
-%     end
-% 
-%     theta = heading;
-%--------------------------------------------------------------------------------------------
+ 
 theta=thetablobs;    
 thetadotsave(1,packNum) = (theta-thetaOld)/0.1;
     thetasave(1,packNum) = theta;
     thetablobsave(1,packNum) = thetablobs;
+    xsave(1,packNum) = x;
+    ysave(1,packNum) = y;
    dt = toc(packetsStart)-time;
    timevec(1,packNum) = toc(packetsStart);
     %END:TODO
@@ -328,10 +267,10 @@ thetadotsave(1,packNum) = (theta-thetaOld)/0.1;
     if (badData) %|| a>40 || b>40 || d>40 
         %uOut = uint8(['<';'[';'(';0; 0; 0; 0; 0; 0; 0; 0; 0; 0;')';']';'>']);
         % hold previous value
-        uOut = raftcontrol(thetaOld,thetaOld,dt,thetades,thetaError,IError);
+        %uOut = raftcontrol(thetaOld,thetaOld,dt,thetades,thetaError,IError);
     else
-        %uOut = raftcontrolxy(theta,x,y)
-         uOut = raftcontrol(theta,thetaOld,dt,thetades,thetaError,IError);
+         uOut = raftcontrolxy(theta,thetaOld,thetades,thetaError,IError,x,y,xdes,ydes);
+%          uOut = raftcontrol2(theta,thetaOld,dt,thetades,thetaError,IError);
     end 
     % END:TODO
  
@@ -343,9 +282,9 @@ thetadotsave(1,packNum) = (theta-thetaOld)/0.1;
         % log and plot updated positions:
     for i=1:numBlobs
         ID=i;               % keep vehicles ordered
-        x=xPlus(1,i);
+%         x=xPlus(1,i);
         xdot=xPlus(2,i);
-        y=xPlus(3,i);
+%         y=xPlus(3,i);
         ydot=xPlus(4,i);
         alpha=xPlus(5,i);
         
@@ -364,15 +303,10 @@ thetadotsave(1,packNum) = (theta-thetaOld)/0.1;
         
     end
     
+    xOld = x;
+    yOld = y;
     thetaOld = theta;
     thetablobsOld = thetablobs;   
-%     AOld = A;
-%     DOld = D; %store current measurement as AOld, DOld for next iteration
-
-    % use this format:
-    % +123.12 for x and y thrust (N)
-    % fprintf('%+07.2f',a)
-    
     
     % pure delay
     %pause(loopDelay/1000); 
