@@ -181,6 +181,6 @@ void draw()
   println(incomingBuffer);
   incomingBuffer.clear(); 
  
- delay(100); 
+ delay(50); 
 }
 
