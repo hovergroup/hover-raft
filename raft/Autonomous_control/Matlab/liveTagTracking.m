@@ -3,9 +3,9 @@ close all;
 
 imaqreset;
 % obj = videoinput('winvideo',2,'MJPG_800x448');  % Pedro's machine
-obj = videoinput('winvideo',1,'RGB24_640x480');  % Pedro's machine
+% obj = videoinput('winvideo',1,'RGB24_640x480');  % Pedro's machine
 % obj = videoinput('winvideo',2,'MJPG_1280x720');  % Pedro's machine
-% obj = videoinput('winvideo',2,'M420_960x544');  % Pedro's machine
+obj = videoinput('winvideo',2,'M420_960x544');  % Pedro's machine
 % obj = videoinput('winvideo',2,'M420_1280x720');  % Pedro's machine
 
 original = imread('tag.png ');
