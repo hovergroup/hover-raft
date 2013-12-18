@@ -2,14 +2,14 @@ function [ T, theta, scale ] = getTransform( image, original )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 %   
-%   based on the MathWorks example available at
+%   Based on the MathWorks example available at
 %   http://www.mathworks.com/help/vision/examples/find-image-rotation-and-scale-using-automated-feature-matching.html
 
     persistent pointsOriginal;
     persistent featuresOriginal;
     persistent validPointsOriginal;
     
-    % Step 0: define default values;
+    % Step 0: define default/fall-back values;
     T = zeros(2,1);
     theta = 0;
     scale = 0;
@@ -18,6 +18,9 @@ function [ T, theta, scale ] = getTransform( image, original )
     if isempty(pointsOriginal)
        pointsOriginal =  detectSURFFeatures(original);
        [featuresOriginal, validPointsOriginal] = extractFeatures(original, pointsOriginal);    
+       disp(['pointsOriginal: ',num2str(size(pointsOriginal,1))]);
+       disp(['validPointsOriginal: ',num2str(size(pointsOriginal,1))]);
+       disp(['featuresOriginal: ',num2str(size(pointsOriginal,1))]);
     end
     pointsImage =  detectSURFFeatures(image);
     [featuresImage, validPointsImage] = extractFeatures(image, pointsImage);
@@ -30,6 +33,8 @@ function [ T, theta, scale ] = getTransform( image, original )
     matchedImage = validPointsImage(indexPairs(:,2));
    
     if ( 1>=size(matchedOriginal,1) || 1 >= size(matchedImage,1) )
+        
+        %disp('failed to find sufficient points');
         return
     end
     
