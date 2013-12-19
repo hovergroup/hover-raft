@@ -66,7 +66,8 @@ preallocate = 10000; % state vector length
 t = zeros(1, preallocate); 
 x = zeros(3, preallocate); 
 v1 = zeros(3, preallocate); 
-v5 = zeros(3, preallocate); 
+v5 = zeros(3, preallocate);
+scale = zeros(1, preallocate);
 
 %% Main loop
 try
@@ -83,7 +84,7 @@ try
         
         distorted = rgb2gray(im);
         
-        [translation, theta, scale, success] = getTransform(distorted,original);
+        [translation, theta, scale(count), success] = getTransform(distorted,original);
         
         if (0==success)
             color = 'b';
@@ -133,3 +134,13 @@ catch exception
     stop(obj);
     imaqreset
 end
+
+%% POST
+
+figure(2);
+B = [x(1:2,:);scale];
+scatter3(B(1,:),B(2,:),B(3,:));
+title('Scaling')
+xlabel('x [px]')
+ylabel('x [px]')
+zlabel('scale [px/px]')
