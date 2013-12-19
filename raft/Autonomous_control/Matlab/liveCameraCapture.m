@@ -130,8 +130,8 @@ try
         end
         
         % run control loop
-        uOut = raftcontrolxy(thetaraft,thetaOld,thetades,thetaError,IError,xraft,yraft,xdes,ydes,xOld,yOld);
-        %uOut = raftcontrol(thetaraft,thetaOld,T,thetades,thetaError,IError);
+        %uOut = raftcontrolxy(thetaraft,thetaOld,thetades,thetaError,IError,xraft,yraft,xdes,ydes,xOld,yOld);
+        uOut = raftcontrol(thetaraft,thetaOld,T,thetades,thetaError,IError);
         
         % send commands to raft
         fwrite(s,uint8(uOut));

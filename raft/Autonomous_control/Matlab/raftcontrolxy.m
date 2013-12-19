@@ -19,34 +19,60 @@ Kdx = 5;
 
 xthrust = -Kpx*(x-xdes)-Kdx*(x-xold1)/dt;
 ythrust = -Kpy*(y-ydes)-Kdy*(y-yold1)/dt;
-%see pg 77-78 of EG lab notebook for derivation
+%see pg 77-78 of EG lab notebook #7 for derivation
 M13 = -1/2*(xthrust-ythrust*tan(thetades))/(-cos(theta)-sin(theta)*tan(theta));
 M24 = -1/2*(ythrust-M13*sin(theta))/cos(theta);
 
-M13a = round255(M13,offset);
-M24a = round255(M24,offset);
+% M13a = round255(M13,offset);
+% M24a = round255(M24,offset);
+M13a = -xthrust;
+M24a = -ythrust;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%heading control command calculation
+Kp = 5; %was 5
+Kd = 1; %was 1
+Ki = 0;
+dt = 0.1;
+
+thrust = -Kp*(thetaError) - Kd*(theta - thetaOld)/dt - Ki*IError;
 %now convert thrust to m1d,m1s,m2d,...,m5s
-% m1s = abs(M13a)+offset;
-m1s = 0;
-m1d = 2-sign(M13a);
+m1s = abs(M13a)+offset;
+m1s = abs(round255(-thrust,offset))+offset;
+m1d = 2+sign(thrust);
 m2s = abs(M24a)+offset;
 m2d = 2-sign(M24a);
-% m3s = m1s;
-m3s = 0;
-m3d = 2+sign(M13a);
+m3s = abs(round255(-thrust,offset))+offset;
+m3d = 2+sign(thrust);
 m4s = m2s;
 m4d = 2+sign(M24a);
 m5s = 0;
 m5d = 3;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%heading control command calculation
-Kp = 0; %was 5
-Kd = 0; %was 1
-Ki = 0;
-dt = 0.1;
+% m1s = abs(round255(-xthrust,offset))+offset;
+% m1d = 2+sign(thrust);
+% m2s = abs(M24a)+offset;
+% m2d = 2-sign(M24a);
+% % m3s = m1s;
+% m3s = abs(round255(-thrust,offset))+offset;
+% m3d = 2+sign(thrust);
+% m4s = m2s;
+% m4d = 2+sign(M24a);
+% m5s = 0;
+% m5d = 3;
 
-thrust = -Kp*(thetaError) - Kd*(theta - thetaOld)/dt - Ki*IError;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+% %heading control command calculation
+% Kp = 0; %was 5
+% Kd = 0; %was 1
+% Ki = 0;
+% dt = 0.1;
+% 
+% thrust = -Kp*(thetaError) - Kd*(theta - thetaOld)/dt - Ki*IError;
 
 %now convert thrust to m1d,m1s,m2d,...,m5s
 % m1st = abs(thrust)+offset;
