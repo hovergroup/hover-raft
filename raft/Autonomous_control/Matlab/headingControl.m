@@ -1,6 +1,9 @@
 function [ thrust ] = headingControl( thetaDesired, theta, dt )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%headingControl PID-based heading controller for the raft
+%   PID-based heading controller for the raft
+%
+%   Eric Gilbertson
+%   Pedro Vaz Teixeira
 
     persistent intError;
     persistent oldError;
