@@ -46,10 +46,10 @@ end
 
 %% Raft communication
 
-% s = serial('COM5');
-% set(s,'BaudRate', 57600);
-% set(s,'ByteOrder','bigEndian');
-% fopen(s);
+% serialPort = serial('COM5');
+% set(serialPort,'BaudRate', 57600);
+% set(serialPort,'ByteOrder','bigEndian');
+% fopen(serialPort);
 
 %% Marker
 
@@ -68,6 +68,7 @@ x = zeros(3, preallocate);
 v1 = zeros(3, preallocate); 
 v5 = zeros(3, preallocate);
 scale = zeros(1, preallocate);
+u = zeros(4, preallocate);
 
 %% Main loop
 try
@@ -84,7 +85,7 @@ try
         
         distorted = rgb2gray(im);
         
-        [translation, theta, scale(count), success] = getTransform(distorted,original);
+        [translation, theta, scale(count), success] = getTransform(distorted, original);
         
         if (0==success)
             color = 'b';
@@ -106,6 +107,17 @@ try
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % BEGIN: RUN CONTROL LOOP HERE %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            u(:,count) = headingControl(t, x, v5);
+            %u(:,count) = positionControl(t, x, v5);
+
+            % fcn to map control signal to thrusters
+            % [thrust, direction] = mapToThruster(u);
+
+            % fcn to assemble telecommand packet
+            commandPacket = assembleCommandPacket(thrust, direction);
+
+            % fwrite(s,uint8(commandPacket));
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % END: RUN CONTROL LOOP HERE %
@@ -133,6 +145,8 @@ catch exception
     disp(exception.stack.line);
     stop(obj);
     imaqreset
+    fclose(serialPort);
+    delete(serialPort);
 end
 
 %% POST
