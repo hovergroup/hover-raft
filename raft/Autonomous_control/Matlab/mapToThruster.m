@@ -20,11 +20,13 @@ Thrusters:
 %}
 	thrust = zeros(4,1);
     direction = zeros(4,1);
-    
-    thrust(1) = thrustX*sin(currentHeading) + thrustY*cos(currentHeading) + omega;
-    thrust(2) = -1* (thrustX*cos(currentHeading) + thrustY*sin(currentHeading) + omega);
-    thrust(3) = -1*(thrustX*sin(currentHeading) + thrustY*cos(currentHeading) + omega);
-    thrust(4) = thrustX*cos(currentHeading) + thrustY*sin(currentHeading) + omega;
+   
+    tx = cos(currentHeading)*thrustX - sin(currentHeading)*thrustY;
+    ty = sin(currentHeading)*thrustX + cos(currentHeading)*thrustY;
+    thrust(1) = ty + omega;
+    thrust(2) = -tx - omega;
+    thrust(3) = -ty + omega;
+    thrust(4) = tx - omega;
     
     for i=1:4
         if thrust(i)>0
