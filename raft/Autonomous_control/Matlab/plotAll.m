@@ -1,4 +1,4 @@
-function [ output_args ] = plotAll( t, x, v5, count, color, successes, failures )
+function [ output_args ] = plotAll( t, x, v5, count, color, successes, failures, imageWidth, imageHeight )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -14,8 +14,8 @@ function [ output_args ] = plotAll( t, x, v5, count, color, successes, failures 
             end
             xlabel('x [px]')
             ylabel('y [px]')
-            xlim([0 1279])
-            ylim([0 719])
+            xlim([0 imageWidth-1])
+            ylim([0 imageHeight-1])
             grid on
             %T = toc;
             title(['Frame rate: ', num2str(5.0/(t(count)-t(count-4))), ' S/F: ', num2str(successes), '/', num2str(failures)]);

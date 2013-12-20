@@ -18,22 +18,27 @@ Thrusters:
 3   AFT         -Y              >0 (CCW)
 4   PORT        +X              <0 (CW)
 %}
-	thrust = zeros(4,1);
-    direction = zeros(4,1);
+	thrust = zeros(5,1);
+    direction = zeros(5,1);
    
     tx = cos(currentHeading)*thrustX - sin(currentHeading)*thrustY;
     ty = sin(currentHeading)*thrustX + cos(currentHeading)*thrustY;
-    thrust(1) = ty + omega;
+    thrust(1) = 0.33*(ty + omega);
     thrust(2) = -tx - omega;
     thrust(3) = -ty + omega;
     thrust(4) = tx - omega;
     
     for i=1:4
         if thrust(i)>0
-            thrust(i) = min(thrust(i),255);
+            thrust(i) = abs(min(thrust(i),255));
             direction(i) = 3;
         else
-            thrust(i) = max(thrust(i),-255);
+            thrust(i) = abs(max(thrust(i),-255));
             direction(i) = 1;
         end 
+        
+        if thrust(i) < 40
+            thrust(i)  = 40;
+        end
+        
     end

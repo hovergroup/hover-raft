@@ -7,17 +7,17 @@
 %}
 %% Clean-up
 
-if(exist('serialPort'))
-    fclose(serialPort)
-    delete(serialPort)
-    clear SerialPort
-end
-
-if(exist('obj'))
-    stop(obj)
-    delete(obj)
-    imaqreset
-end
+% if(exist('serialPort'))
+%     fclose(serialPort)
+%     delete(serialPort)
+%     clear SerialPort
+% end
+% 
+% if(exist('obj'))
+%     stop(obj)
+%     delete(obj)
+%     imaqreset
+% end
 
 clear all;
 close all;
@@ -51,6 +51,11 @@ try
     obj.FramesPerTrigger =1;
     obj.TriggerRepeat = Inf;
     obj.ReturnedColorspace = 'rgb';
+    
+    imageSize = obj.VideoResolution;
+    
+    imageWidth = imageSize(1);
+    imageHeight = imageSize(2);
     
     src = getselectedsource(obj);
     src.BacklightCompensation = 'off';
@@ -97,12 +102,15 @@ u = zeros(4, preallocate);
 %xdes = [394 120 0]; %xdes, ydes, thetades
 
 %% Goals
-xDesired(:,1) = [640 360 0]';   % hold point
-xDesired(:,2) = [394 120 0]';   % drill
+xDesired(:,1) = [200 300 -pi/2]';   % hold point
+xDesired(:,2) = [600 300 -pi/2]';   % hold point
+xDesired(:,3) = [600 200 -pi/2]';   % hold point
+xDesired(:,4) = [400 200 -pi/2]';   % hold point
+xDesired(:,5) = [394 120 -pi/2]';   % drill
 currentGoal = 1;
 
 %% Main loop
-try
+% try
     start(obj);
 
     % pvt: there's probably a way to write this loop so that it performs
@@ -140,48 +148,47 @@ try
             % BEGIN: RUN CONTROL LOOP HERE %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%             u(:,count) = headingControl(t, x, v5);
-            %u(:,count) = positionControl(t, x, v5);
-
-            % fcn to map control signal to thrusters
-            % [thrust, direction] = mapToThruster(u);
-
-            % fcn to assemble telecommand packet
-%             commandPacket = assembleCommandPacket(thrust, direction);
-
-            % fwrite(s,uint8(commandPacket));
-
-            positionError = abs(mean(x(1:3,count-4:count) - repmat(xDesired(:,currentGoal),1,5)));
             
-            if ( positionError(1)<10 && positionError(2)<10 && positionError(3) < deg2rad(10) )
-                disp('Reached:');
-                xDesired(:,currentGoal);
-                if(currentGoal<size(xDesired,2))
-                    currentGoal = currentGoal+1;
-                    disp('Next waypoint:');
-                    xDesired(:,currentGoal);
-                else
-                    disp('Task complete');
-                    stop(obj);
-                    imaqreset
-                    fclose(serialPort);
-                    delete(serialPort);
-                    return
+            if(count > 11)
+                positionError = mean(abs(x(1:3,count-9:count) - repmat(xDesired(:,currentGoal),1,10)),2);
+                if ( positionError(1)<20 && positionError(2)<20 && positionError(3) < deg2rad(2.0) )
+                    disp('Reached:');
+                    xDesired(:,currentGoal)
+                    disp('Error:')
+                    positionError
+                    if(currentGoal<size(xDesired,2))
+                        currentGoal = currentGoal+1;
+                        disp('Next waypoint:');
+                        xDesired(:,currentGoal)
+                    else
+                        disp('Task complete');
+                        stop(obj);
+                        imaqreset
+                        fclose(serialPort);
+                        delete(serialPort);
+                        clear serialPort;
+                        clear obj;  
+                        break;
+                    end
                 end
             end
 
             % run control loop
-            uOut = raftcontrolxy2(x(:,count),v5(:,count),xDesired(:,currentGoal),0);
-            %uOut = raftcontrol2(x(:,count),v5(:,count),xdes,0);
-        
+            IError = x(:,count) - xDesired(:,currentGoal);
+            %commandPacket = raftcontrolxy2(x(:,count),v5(:,count),xDesired(:,currentGoal),0);
+            %commandPacket = raftcontrol2(x(:,count),v5(:,count),xdes,0);
+            thrustvec = raftcontrolxy3(x(:,count),v5(:,count),xDesired(:,currentGoal),IError);
+            [thrust, direction] = mapToThruster(thrustvec(1), thrustvec(2), thrustvec(3), x(3,count));
+            commandPacket = assembleCommandPacket(thrust, direction);
+           
             % send commands to raft
-            fwrite(serialPort,uint8(uOut))
+            fwrite(serialPort,uint8(commandPacket))
         
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % END: RUN CONTROL LOOP HERE %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
-            plotAll(t, x, v5, count, color, successes, failures);    
+            plotAll(t, x, v5, count, color, successes, failures, imageWidth, imageHeight );    
 
             % resize state vector
             if size(x,2)-count < 100
@@ -192,21 +199,21 @@ try
             end
         end
      end
-catch exception
-    disp('ERROR:')
-    disp(exception.message);
-    disp('FILE:')
-    disp(exception.stack.file);
-    disp('LINE:')
-    disp(exception.stack.line);
-    stop(obj);
-    imaqreset
-    fclose(serialPort);
-    delete(serialPort);
-end
+% catch exception
+%     disp('ERROR:')
+%     disp(exception.message);
+%     disp('FILE:')
+%     disp(exception.stack.file);
+%     disp('LINE:')
+%     disp(exception.stack.line);
+%     stop(obj);
+%     imaqreset
+%     fclose(serialPort);
+%     delete(serialPort);
+% end
 
 %% POST
-
+x = x(:,1:count);
 figure(2);
 B = [x(1:2,:);scale];
 scatter3(B(1,:),B(2,:),B(3,:));
@@ -214,3 +221,5 @@ title('Scaling')
 xlabel('x [px]')
 ylabel('x [px]')
 zlabel('scale [px/px]')
+figure(3)
+plot(rad2deg(x(3,:)))

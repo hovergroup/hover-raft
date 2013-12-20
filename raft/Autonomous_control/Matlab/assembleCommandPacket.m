@@ -6,7 +6,7 @@ function [packet] = assembleCommandPacket(thrust, direction)
 	packet = uint8(['<';'[';'(']);
 
 	for i=1:5;
-		packet = [packet, uint8(thrust(i)), uint8(direction(i))];
+		packet = [packet; uint8(thrust(i)); uint8(direction(i))];
 	end
 
-	packet = [packet, uint8([')';']';'>'])];
+	packet = [packet; uint8([')';']';'>'])];
