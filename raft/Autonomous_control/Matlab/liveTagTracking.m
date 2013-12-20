@@ -7,6 +7,18 @@
 %}
 %% Clean-up
 
+if(exist('serialPort'))
+    fclose(serialPort)
+    delete(serialPort)
+    clear SerialPort
+end
+
+if(exist('obj'))
+    stop(obj)
+    delete(obj)
+    imaqreset
+end
+
 clear all;
 close all;
 clc;
@@ -28,7 +40,7 @@ try
 %     obj = videoinput('winvideo',1,'MJPG_960x544');    
 %     obj = videoinput('winvideo',1,'MJPG_1280x720');
 
-    obj = videoinput('winvideo',1,'YUY2_800x448');  
+%     obj = videoinput('winvideo',1,'YUY2_800x448');  
 
     % config:pvt
 %     obj = videoinput('winvideo',2,'MJPG_800x448');
@@ -59,10 +71,10 @@ end
 
 %% Raft communication
 
-s = serial('COM3');
-set(s,'BaudRate', 57600);
-set(s,'ByteOrder','bigEndian');
-fopen(s);
+serialPort = serial('COM3');
+set(serialPort,'BaudRate', 57600);
+set(serialPort,'ByteOrder','bigEndian');
+fopen(serialPort);
 
 %% Marker
 
@@ -82,10 +94,15 @@ v1 = zeros(3, preallocate);
 v5 = zeros(3, preallocate);
 scale = zeros(1, preallocate);
 u = zeros(4, preallocate);
-xdes = [300 300 90]; %xdes, ydes, thetades
+%xdes = [394 120 0]; %xdes, ydes, thetades
+
+%% Goals
+xDesired(:,1) = [640 360 0]';   % hold point
+xDesired(:,2) = [394 120 0]';   % drill
+currentGoal = 1;
 
 %% Main loop
-% try
+try
     start(obj);
 
     % pvt: there's probably a way to write this loop so that it performs
@@ -118,6 +135,7 @@ xdes = [300 300 90]; %xdes, ydes, thetades
 %             v1(:,count) = v1(:,count) * (1/(t(count) - t(count-1)));
             v5(:,count) = mean(diff(x(1:3,count-4:count),1,2),2);
             v5(:,count) = v5(:,count) * (4/(t(count) - t(count-4)));
+            
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % BEGIN: RUN CONTROL LOOP HERE %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -133,21 +151,38 @@ xdes = [300 300 90]; %xdes, ydes, thetades
 
             % fwrite(s,uint8(commandPacket));
 
+            positionError = abs(mean(x(1:3,count-4:count) - repmat(xDesired(:,currentGoal),1,5)));
+            
+            if ( positionError(1)<10 && positionError(2)<10 && positionError(3) < deg2rad(10) )
+                disp('Reached:');
+                xDesired(:,currentGoal);
+                if(currentGoal<size(xDesired,2))
+                    currentGoal = currentGoal+1;
+                    disp('Next waypoint:');
+                    xDesired(:,currentGoal);
+                else
+                    disp('Task complete');
+                    stop(obj);
+                    imaqreset
+                    fclose(serialPort);
+                    delete(serialPort);
+                    return
+                end
+            end
+
             % run control loop
-            uOut = raftcontrolxy2(x(:,count),v5(:,count),xdes,0);
+            uOut = raftcontrolxy2(x(:,count),v5(:,count),xDesired(:,currentGoal),0);
             %uOut = raftcontrol2(x(:,count),v5(:,count),xdes,0);
         
             % send commands to raft
-            fwrite(s,uint8(uOut))
+            fwrite(serialPort,uint8(uOut))
         
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % END: RUN CONTROL LOOP HERE %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
             plotAll(t, x, v5, count, color, successes, failures);    
-        
-%             disp(count/toc);
-            disp(scale(count));
+
             % resize state vector
             if size(x,2)-count < 100
                 t = [t, zeros(1, preallocate)];
@@ -157,18 +192,18 @@ xdes = [300 300 90]; %xdes, ydes, thetades
             end
         end
      end
-% catch exception
-%     disp('ERROR:')
-%     disp(exception.message);
-%     disp('FILE:')
-%     disp(exception.stack.file);
-%     disp('LINE:')
-%     disp(exception.stack.line);
-%     stop(obj);
-%     imaqreset
-%     fclose(serialPort);
-%     delete(serialPort);
-% end
+catch exception
+    disp('ERROR:')
+    disp(exception.message);
+    disp('FILE:')
+    disp(exception.stack.file);
+    disp('LINE:')
+    disp(exception.stack.line);
+    stop(obj);
+    imaqreset
+    fclose(serialPort);
+    delete(serialPort);
+end
 
 %% POST
 

@@ -32,8 +32,8 @@ M24 = -1/2*(ythrust-M13*sin(theta))/cos(theta);
 
 % M13a = round255(M13,offset);
 % M24a = round255(M24,offset);
-M13a = -xthrust;
-M24a = -ythrust;
+M13a = xthrust;
+M24a = ythrust;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %heading control command calculation
