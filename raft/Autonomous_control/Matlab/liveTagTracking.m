@@ -16,11 +16,24 @@ try
     imaqreset;
 
     % config:raft
+%     obj = videoinput('winvideo',1,'M420_640x360');  
+%     obj = videoinput('winvideo',1,'M420_640x480');  
+    obj = videoinput('winvideo',1,'M420_800x448');  
+%     obj = videoinput('winvideo',1,'M420_960x544');    
+%     obj = videoinput('winvideo',1,'M420_1280x720');
+
+%     obj = videoinput('winvideo',1,'MJPG_640x360');  
+%     obj = videoinput('winvideo',1,'MJPG_640x480');  
+%     obj = videoinput('winvideo',1,'MJPG_800x448');  
+%     obj = videoinput('winvideo',1,'MJPG_960x544');    
+%     obj = videoinput('winvideo',1,'MJPG_1280x720');
+
+    obj = videoinput('winvideo',1,'YUY2_800x448');  
 
     % config:pvt
 %     obj = videoinput('winvideo',2,'MJPG_800x448');
-    % obj = videoinput('winvideo',1,'RGB24_640x480');
-    obj = videoinput('winvideo',2,'MJPG_1280x720');
+%     obj = videoinput('winvideo',1,'RGB24_640x480');
+%     obj = videoinput('winvideo',2,'MJPG_1280x720');
 %     obj = videoinput('winvideo',2,'M420_960x544');
 
     obj.FramesPerTrigger =1;
@@ -46,10 +59,10 @@ end
 
 %% Raft communication
 
-% serialPort = serial('COM5');
-% set(serialPort,'BaudRate', 57600);
-% set(serialPort,'ByteOrder','bigEndian');
-% fopen(serialPort);
+s = serial('COM3');
+set(s,'BaudRate', 57600);
+set(s,'ByteOrder','bigEndian');
+fopen(s);
 
 %% Marker
 
@@ -69,9 +82,10 @@ v1 = zeros(3, preallocate);
 v5 = zeros(3, preallocate);
 scale = zeros(1, preallocate);
 u = zeros(4, preallocate);
+xdes = [300 300 90]; %xdes, ydes, thetades
 
 %% Main loop
-try
+% try
     start(obj);
 
     % pvt: there's probably a way to write this loop so that it performs
@@ -88,14 +102,14 @@ try
         [translation, theta, scale(count), success] = getTransform(distorted, original);
         
         if (0==success)
-            color = 'b';
+            color = 'r';
             failures = failures + 1;
             if(count > 1)
                 x(1:3, count) = x(1:3,count-1); % hold
             end
         else
             successes = successes + 1;
-            color='r';
+            color='b';
             x(1:3, count) = [translation; theta];
         end
         
@@ -108,25 +122,32 @@ try
             % BEGIN: RUN CONTROL LOOP HERE %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            u(:,count) = headingControl(t, x, v5);
+%             u(:,count) = headingControl(t, x, v5);
             %u(:,count) = positionControl(t, x, v5);
 
             % fcn to map control signal to thrusters
             % [thrust, direction] = mapToThruster(u);
 
             % fcn to assemble telecommand packet
-            commandPacket = assembleCommandPacket(thrust, direction);
+%             commandPacket = assembleCommandPacket(thrust, direction);
 
             % fwrite(s,uint8(commandPacket));
 
+            % run control loop
+            uOut = raftcontrolxy2(x(:,count),v5(:,count),xdes,0);
+            %uOut = raftcontrol2(x(:,count),v5(:,count),xdes,0);
+        
+            % send commands to raft
+            fwrite(s,uint8(uOut))
+        
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % END: RUN CONTROL LOOP HERE %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
-            % plotAll(t, x, v5, count, color, successes, failures);    
+            plotAll(t, x, v5, count, color, successes, failures);    
         
-            disp(count/toc);
-            
+%             disp(count/toc);
+            disp(scale(count));
             % resize state vector
             if size(x,2)-count < 100
                 t = [t, zeros(1, preallocate)];
@@ -136,18 +157,18 @@ try
             end
         end
      end
-catch exception
-    disp('ERROR:')
-    disp(exception.message);
-    disp('FILE:')
-    disp(exception.stack.file);
-    disp('LINE:')
-    disp(exception.stack.line);
-    stop(obj);
-    imaqreset
-    fclose(serialPort);
-    delete(serialPort);
-end
+% catch exception
+%     disp('ERROR:')
+%     disp(exception.message);
+%     disp('FILE:')
+%     disp(exception.stack.file);
+%     disp('LINE:')
+%     disp(exception.stack.line);
+%     stop(obj);
+%     imaqreset
+%     fclose(serialPort);
+%     delete(serialPort);
+% end
 
 %% POST
 
