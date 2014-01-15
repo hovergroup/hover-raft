@@ -102,11 +102,14 @@ u = zeros(4, preallocate);
 %xdes = [394 120 0]; %xdes, ydes, thetades
 
 %% Goals
-xDesired(:,1) = [200 300 -pi/2]';   % hold point
-xDesired(:,2) = [600 300 -pi/2]';   % hold point
-xDesired(:,3) = [600 200 -pi/2]';   % hold point
-xDesired(:,4) = [400 200 -pi/2]';   % hold point
-xDesired(:,5) = [394 120 -pi/2]';   % drill
+% xDesired(:,1) = [200 300 -pi/2]';   % hold point
+% xDesired(:,2) = [600 300 -pi/2]';   % hold point
+% xDesired(:,3) = [600 200 -pi/2]';   % hold point
+% xDesired(:,4) = [400 200 -pi/2]';   % hold point
+% xDesired(:,5) = [394 120 -pi/2]';   % drill
+
+xDesired(:,1) = [394 200 -pi/2]';   % hold point
+xDesired(:,2) = [394 100 -pi/2]';   % drill
 currentGoal = 1;
 
 %% Main loop
