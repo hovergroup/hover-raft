@@ -178,7 +178,7 @@ void draw()
     incomingBuffer.add((char)port.read());
   }
   //parse
-  println(incomingBuffer);
+  //println(incomingBuffer);
   incomingBuffer.clear(); 
  
  delay(50); 
