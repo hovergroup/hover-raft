@@ -30,8 +30,8 @@ try
     % config:raft
 %     obj = videoinput('winvideo',1,'M420_640x360');  
 %     obj = videoinput('winvideo',1,'M420_640x480');  
-    obj = videoinput('winvideo',1,'M420_800x448');  
-%     obj = videoinput('winvideo',1,'M420_960x544');    
+%     obj = videoinput('winvideo',1,'M420_800x448');  
+    obj = videoinput('winvideo',1,'M420_960x544');    
 %     obj = videoinput('winvideo',1,'M420_1280x720');
 
 %     obj = videoinput('winvideo',1,'MJPG_640x360');  
@@ -108,8 +108,8 @@ u = zeros(4, preallocate);
 % xDesired(:,4) = [400 200 -pi/2]';   % hold point
 % xDesired(:,5) = [394 120 -pi/2]';   % drill
 
-xDesired(:,1) = [394 200 -pi/2]';   % hold point
-xDesired(:,2) = [394 100 -pi/2]';   % drill
+xDesired(:,1) = [494 250 -pi/2]';   % hold point
+xDesired(:,2) = [494 250 -pi/2]';   % drill
 currentGoal = 1;
 
 %% Main loop
@@ -154,7 +154,7 @@ currentGoal = 1;
             
             if(count > 11)
                 positionError = mean(abs(x(1:3,count-9:count) - repmat(xDesired(:,currentGoal),1,10)),2);
-                if ( positionError(1)<20 && positionError(2)<20 && positionError(3) < deg2rad(2.0) )
+                if ( positionError(1)<20 && positionError(2)<20 && positionError(3) < deg2rad(5.0) )
                     disp('Reached:');
                     xDesired(:,currentGoal)
                     disp('Error:')
@@ -178,9 +178,8 @@ currentGoal = 1;
 
             % run control loop
             IError = x(:,count) - xDesired(:,currentGoal);
-            %commandPacket = raftcontrolxy2(x(:,count),v5(:,count),xDesired(:,currentGoal),0);
-            %commandPacket = raftcontrol2(x(:,count),v5(:,count),xdes,0);
-            thrustvec = raftcontrolxy3(x(:,count),v5(:,count),xDesired(:,currentGoal),IError);
+            %thrustvec = raftcontrolxy3(x(:,count),v5(:,count),xDesired(:,currentGoal),IError);
+            thrustvec = ConstThrust(count);
             [thrust, direction] = mapToThruster(thrustvec(1), thrustvec(2), thrustvec(3), x(3,count));
             commandPacket = assembleCommandPacket(thrust, direction);
            
