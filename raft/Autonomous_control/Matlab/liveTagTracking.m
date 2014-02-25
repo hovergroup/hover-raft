@@ -100,6 +100,11 @@ v5 = zeros(3, preallocate);
 scale = zeros(1, preallocate);
 u = zeros(4, preallocate);
 %xdes = [394 120 0]; %xdes, ydes, thetades
+utheta = 0;
+uthetasave = zeros(1,preallocate);
+xest = [0 0 0]';
+xestsave = zeros(3,preallocate);
+lossvec = zeros(1,preallocate);
 
 %% Goals
 % xDesired(:,1) = [200 300 -pi/2]';   % hold point
@@ -154,7 +159,7 @@ currentGoal = 1;
             
             if(count > 11)
                 positionError = mean(abs(x(1:3,count-9:count) - repmat(xDesired(:,currentGoal),1,10)),2);
-                if ( positionError(1)<20 && positionError(2)<20 && positionError(3) < deg2rad(5.0) )
+                if ( positionError(1)<20 && positionError(2)<20 && positionError(3) < deg2rad(0.1) )
                     disp('Reached:');
                     xDesired(:,currentGoal)
                     disp('Error:')
@@ -178,8 +183,14 @@ currentGoal = 1;
 
             % run control loop
             IError = x(:,count) - xDesired(:,currentGoal);
+            %thrustvec = headingControl(0,x(1,count),0.1);
             %thrustvec = raftcontrolxy3(x(:,count),v5(:,count),xDesired(:,currentGoal),IError);
-            thrustvec = ConstThrust(count);
+            %thrustvec = ConstThrust(count);
+            [control1, control2, control3, xest, utheta, loss] = HeadingControlLQG(x(:,count),xest,utheta);
+            uthetasave(count) = utheta;
+            xestsave(:,count) = xest;
+            lossvec(count) = loss;
+            thrustvec = [control1 control2 control3];
             [thrust, direction] = mapToThruster(thrustvec(1), thrustvec(2), thrustvec(3), x(3,count));
             commandPacket = assembleCommandPacket(thrust, direction);
            

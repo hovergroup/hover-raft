@@ -16,9 +16,9 @@ function [ thrust ] = headingControl( thetaDesired, theta, dt )
         oldError = 0;
     end
 
-    Kp = 150;
-    Kd = 0;
-    Ki = 3;
+    Kp = 5;
+    Kd = 2;
+    Ki = 10;
         
     error = thetaDesired - theta;
     
@@ -36,9 +36,11 @@ function [ thrust ] = headingControl( thetaDesired, theta, dt )
        intError = intError - error;
        v = v/abs(v);
     end
+    offset = 30;
+    %thrust = [v -v v -v];
+    vrounded =round255(v,offset)+offset;
     
-    thrust = [v -v v -v];
-    
+    thrust = [0 0 vrounded];
     oldError = error;    
 end
 
