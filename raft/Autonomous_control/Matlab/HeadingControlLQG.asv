@@ -8,6 +8,10 @@ a=1.4;
 b=4;
 Kmodel=50;
 
+% a=0.095;
+% b=5;
+% Kmodel=400;
+
 A = [0 1 0; 0 0 1; 0 -(a+b) -a*b];
 B = [0 0 Kmodel*a*b]';
 C = [1 0 0];
@@ -29,19 +33,20 @@ Q = 10*eye(3);
 R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
-alpha = 0.8;
-h=20;
+alpha = 0.0;
+h=0.0000001;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
 theta=x1(3)*180/pi;
     y = h*floor(theta/h+0.5); 
     
-    if rand<alpha %packet received
+    if rand>alpha %packet received
         xest = Ad*xestin+Bd*uthetain+L*(y-Cd*xestin);  %update state estimate
-        loss=1
-        disp('Packet Fake Lost');
+        loss=NaN;      
     else %packet lost
         xest = Ad*xestin+Bd*uthetain;
+        loss=0;
+        %disp('Packet Fake Lost');
     end
 
     utheta = -K*xest; %compute control command, u, as percentage of max thrust

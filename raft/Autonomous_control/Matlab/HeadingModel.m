@@ -20,7 +20,7 @@ headingratevec = diff(c)./diff(t(1:size(c,2)));
 % grid on
 
 figure
-plot(t(20:size(c,2)-2),c(20:size(c,2)-2)+theta0,'-b.','LineWidth',3);
+plot(t(1:size(c,2)-2),c(1:size(c,2)-2)+theta0,'-b.','LineWidth',3);
 xlabel('Time [s]')
 ylabel('Heading Smoothed [deg]');       
 grid on

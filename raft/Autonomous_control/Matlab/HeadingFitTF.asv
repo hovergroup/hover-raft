@@ -20,7 +20,7 @@ headingvec = rad2deg(x(3,1:count))-theta0;
 headingratevec200 = diff(c)./diff(t(1:size(c,2)));
 tvec200 = t(20:30)-t(20);
 %--------
-load('HeadingTestThrust150b.mat')
+load('HeadingTestThrust150.mat')
 theta0 = rad2deg(x(3,20));
 headingvec = rad2deg(x(3,1:count))-theta0;
  window = [sin(pi/6) sin(pi/3), sin(pi/2) sin(pi/3) sin(pi/6)];
@@ -28,7 +28,7 @@ headingvec = rad2deg(x(3,1:count))-theta0;
 headingratevec150 = diff(c)./diff(t(1:size(c,2)));
 tvec150 = t(20:30)-t(20);
 %--------
-load('HeadingTestThrust100b.mat')
+load('HeadingTestThrust100.mat')
 theta0 = rad2deg(x(3,20));
 headingvec = rad2deg(x(3,1:count))-theta0;
  window = [sin(pi/6) sin(pi/3), sin(pi/2) sin(pi/3) sin(pi/6)];
@@ -39,9 +39,9 @@ tvec100 = t(20:30)-t(20);
 %Calculate Model
 s=tf([1 0],1);
 %second-order system
-a=0.095;
-b=5;
-K = 400*a*b;
+a=1.4;
+b=4;
+K = 50*a*b;
 sys = K/((s+a)*(s+b));
 [ys,ts] = step(sys,1);
 
@@ -52,7 +52,7 @@ sys = K/((s+a)*(s+b));
 % [ys,ts] = step(sys,4);
 
 figure
-plot(tvec200,headingratevec200(20:30),'--g.',ts,ys*0.8,'-g',tvec150,headingratevec150(20:30),'--b.',tvec100,headingratevec100(20:30)+1,'--m.','LineWidth',3);
+plot(tvec250,headingratevec250(20:60),'--k.',ts,ys,'-k',tvec200,headingratevec200(20:60),'--b.',tvec150,headingratevec100(20:30)+1,'--m.','LineWidth',3);
 xlabel('Time [s]','FontSize',16)
 ylabel('Heading Rate [deg/sec]','FontSize',16);
 set(gca,'FontSize',16)
