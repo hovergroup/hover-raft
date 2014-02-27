@@ -28,12 +28,13 @@ hold on
 plot(t(20:count),headingvec(20:count)+theta0,['--','r','.'],'LineWidth',2);
 
 figure
-plot(t(20:size(headingratevec,2))-t(20),headingratevec(20:size(headingratevec,2)),'-b.','LineWidth',3);
+plot(t(1:size(headingratevec,2)),headingratevec(1:size(headingratevec,2)),'-b.',t,xestsave(2,:),'-g.','LineWidth',3);
 xlabel('Time [s]')
-ylabel('Heading Rate [deg]');       
+ylabel('Heading Rate [deg]'); 
+legend('Meas','Est')
 grid on
 % hold on
-% plot(t(20:count),rad2deg(v5(3,20:count)),'-r.','LineWidth',3);
+% plot(t,xestsave(2,:),'LineWidth',3);
 % xlabel('Time [s]')
 % ylabel('Yaw rate [deg/s]');       
 % grid on 

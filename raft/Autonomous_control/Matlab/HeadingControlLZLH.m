@@ -1,7 +1,7 @@
 %compute thrust command for theta using LQG controller
 %EWG 2014
 
-function [control1, control2, control3, xest, utheta, loss] = HeadingControlLQG(x1,xestin,uthetain)
+function [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(x1,yin,uin)
 %Define system model
 %model parameters
 a=1.4;
@@ -26,30 +26,43 @@ Qn = 1;
 Rn = 1;
 Nn = 0;
  [kest,L,P] = kalman(sysd,Qn,Rn,Nn); %L is kalman gain
-%[kest,L,P] = kalman(sys,Qn,Rn,Nn); %L is kalman gain
+[kestc,Lc,Pc] = kalman(sys,Qn,Rn,Nn); %continuous time kalman gain
 
 %LQR controller parameters
 Q = 100*eye(3);
 R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
-alpha = 0.0;
-h=1;
+[Kc,Sc,ec] = lqr(A,B,Q,R,N); %continuous time parameters
+ alpha = 0.0;
+% h=0.0001;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
+% [numc, denc] = ss2tf(A-B*Kc-Lc*C, Lc, -Kc, 0,1); %continuous time TF from theta to control command u
+% Hc = tf(numc, denc);
+% Hd = c2d(Hc,0.1); %discrete time TF from theta to control command u
+% [numd, dend] = tfdata(Hd,'v');
+sys1 = ss(Ad-Bd*K-L*Cd,L,-K,0,0.1);
+Hd = tf(sys1);
+[numd, dend] = tfdata(Hd,'v');
+
+
 theta=x1(3)*180/pi;
-    y = h*floor(theta/h+0.5); 
     
-    if rand>alpha %packet received
-        xest = Ad*xestin+Bd*uthetain+L*(y-Cd*xestin);  %update state estimate
+    if rand>=alpha %packet received
+        y = theta;  %update state estimate
         loss=NaN;      
     else %packet lost
-        xest = Ad*xestin+Bd*uthetain;
+        y = 0; %LZ
+        %xest = xestold; %LH
         loss=0;
         %disp('Packet Fake Lost');
     end
-
-    utheta = -K*xest; %compute control command, u, as percentage of max thrust
+    yout = [y yin(1) yin(2) yin(3)]
+    utheta = 1/dend(1)*(numd(2)*yout(2)+numd(3)*yout(3)+numd(4)*yout(4)-dend(2)*uin(1)-dend(3)*uin(2)-dend(4)*uin(3));
+    %utheta = 1/dend(1)*(numd*yout'-dend(2:end)*uin(2:end)');
+    uout = [utheta uin(1) uin(2) uin(3)]
+    
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define controller gains

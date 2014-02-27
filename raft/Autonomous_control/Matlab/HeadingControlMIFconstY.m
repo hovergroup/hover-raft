@@ -1,16 +1,12 @@
 %compute thrust command for theta using LQG controller
 %EWG 2014
 
-function [control1, control2, control3, xest, utheta, loss] = HeadingControlLQG(x1,xestin,uthetain)
+function [control1, control2, control3, xest, utheta, loss, gsim, psisim] = HeadingControlMIFconstY(x1,xestin,uthetain,gsimin,psisimin)
 %Define system model
 %model parameters
 a=1.4;
 b=4;
 Kmodel=50;
-
-% a=0.095;
-% b=5;
-% Kmodel=400;
 
 A = [0 1 0; 0 0 1; 0 -(a+b) -a*b];
 B = [0 0 Kmodel*a*b]';
@@ -34,21 +30,30 @@ R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
 alpha = 0.0;
-h=1;
+h=0.00001; %quantization bin size
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%MIF Parameters
+%Y converges to this steady state value
+Y=[ 1.6122 -0.0535 0.0375; -0.0535 0.3596 0.2685; 0.0375 0.2685 0.4018];
+
+gamma = (Y-Cd'*inv(Rn)*Cd)*Ad*inv(Y);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
 theta=x1(3)*180/pi;
-    y = h*floor(theta/h+0.5); 
+    ymeas = theta; %quantized measurement
+    gsim = Cd'*inv(Rn)*ymeas+gamma*gsimin
+    psisim = (Y-Cd'*inv(Rn)*Cd)*Bd*(-K)*xestin+gamma*psisimin
     
     if rand>alpha %packet received
-        xest = Ad*xestin+Bd*uthetain+L*(y-Cd*xestin);  %update state estimate
+        xest = inv(Y)*(gsim+psisim);  %update state estimate
+        %xest = Ad*xestin+Bd*uthetain+L*(ymeas-Cd*xestin);  %update state estimate
         loss=NaN;      
     else %packet lost
         xest = Ad*xestin+Bd*uthetain;
         loss=0;
         %disp('Packet Fake Lost');
     end
-
+    
     utheta = -K*xest; %compute control command, u, as percentage of max thrust
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

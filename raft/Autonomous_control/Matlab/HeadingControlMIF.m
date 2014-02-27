@@ -1,16 +1,12 @@
 %compute thrust command for theta using LQG controller
 %EWG 2014
 
-function [control1, control2, control3, xest, utheta, loss] = HeadingControlLQG(x1,xestin,uthetain)
+function [control1, control2, control3, xest, utheta, loss, gsim, psisim, Yk1k1,Ykk1] = HeadingControlMIF(x1,xestin,uthetain,gsimin,psisimin,Yk1k1in,Ykk1in)
 %Define system model
 %model parameters
 a=1.4;
 b=4;
 Kmodel=50;
-
-% a=0.095;
-% b=5;
-% Kmodel=400;
 
 A = [0 1 0; 0 0 1; 0 -(a+b) -a*b];
 B = [0 0 Kmodel*a*b]';
@@ -34,21 +30,33 @@ R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
 alpha = 0.0;
-h=1;
+h=0.00001; %quantization bin size
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%MIF Parameters
+Qm = eye(3);
+Ykkout = Ykk1in+C'*inv(Rn)*C;
+Y=inv(P);
+gamma = Ykk1in*Ad*inv(Yk1k1in);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
 theta=x1(3)*180/pi;
-    y = h*floor(theta/h+0.5); 
+    ymeas = theta; %quantized measurement
+    gsim = Cd'*inv(Rn)*ymeas+gamma*gsimin;
+    psisim = Ykk1in*Bd*(-K)*xestin+gamma*psisimin;
     
     if rand>alpha %packet received
-        xest = Ad*xestin+Bd*uthetain+L*(y-Cd*xestin);  %update state estimate
+        xest = inv(Ykkout)*(gsim+psisim);  %update state estimate
+        %xest = Ad*xestin+Bd*uthetain+L*(ymeas-Cd*xestin);  %update state estimate
         loss=NaN;      
     else %packet lost
         xest = Ad*xestin+Bd*uthetain;
         loss=0;
         %disp('Packet Fake Lost');
     end
-
+    
+    Ykk1 = inv(Qm)-inv(Qm)*Ad*(Ad'*inv(Qm)*Ad+Ykkout)^(-1)*Ad'*inv(Qm)
+    Yk1k1 = Ykkout
     utheta = -K*xest; %compute control command, u, as percentage of max thrust
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
