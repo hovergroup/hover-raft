@@ -29,8 +29,8 @@ Q = 100*eye(3);
 R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
-alpha = 0.0;
-h=0.00001; %quantization bin size
+alpha = 0.;
+h=10; %quantization bin size
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %MIF Parameters
 %Y converges to this steady state value
@@ -40,7 +40,7 @@ gamma = (Y-Cd'*inv(Rn)*Cd)*Ad*inv(Y);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
 theta=x1(3)*180/pi;
-    ymeas = theta; %quantized measurement
+    ymeas = h*floor(theta/h+0.5); %quantized measurement
     gsim = Cd'*inv(Rn)*ymeas+gamma*gsimin
     psisim = (Y-Cd'*inv(Rn)*Cd)*Bd*(-K)*xestin+gamma*psisimin
     

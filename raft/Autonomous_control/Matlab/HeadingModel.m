@@ -20,12 +20,19 @@ headingratevec = diff(c)./diff(t(1:size(c,2)));
 % grid on
 
 figure
-plot(t(1:size(c,2)-2),c(1:size(c,2)-2)+theta0,'-b.','LineWidth',3);
-xlabel('Time [s]')
-ylabel('Heading Smoothed [deg]');       
+stairs(t(20:count),headingvec(20:count)+theta0,['-','b','.'],'LineWidth',2);
+hold on 
+plot(t(20:count),0*t(20:count)+5,'r',t(20:count),0*t(20:count)-5,'r')
+%plot(t(1:size(c,2)-2),c(1:size(c,2)-2)+theta0,'-b.','LineWidth',3);
+xlabel('Time [s]','FontSize',16)
+ylabel('Heading [deg]','FontSize',16);
+title('Q, h=10','FontSize',16)
+set(gca,'FontSize',16)
+axis([0 330 -20 20]);
 grid on
-hold on
-plot(t(20:count),headingvec(20:count)+theta0,['--','r','.'],'LineWidth',2);
+
+
+break
 
 figure
 plot(t(1:size(headingratevec,2)),headingratevec(1:size(headingratevec,2)),'-b.',t,xestsave(2,:),'-g.','LineWidth',3);

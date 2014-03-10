@@ -26,42 +26,37 @@ Qn = 1;
 Rn = 1;
 Nn = 0;
  [kest,L,P] = kalman(sysd,Qn,Rn,Nn); %L is kalman gain
-[kestc,Lc,Pc] = kalman(sys,Qn,Rn,Nn); %continuous time kalman gain
+% [kestc,Lc,Pc] = kalman(sys,Qn,Rn,Nn); %continuous time kalman gain
 
 %LQR controller parameters
 Q = 100*eye(3);
 R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
-[Kc,Sc,ec] = lqr(A,B,Q,R,N); %continuous time parameters
- alpha = 0.0;
-% h=0.0001;
+% [Kc,Sc,ec] = lqr(A,B,Q,R,N); %continuous time parameters
+ alpha = 0.5;
+ h=10;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
-% [numc, denc] = ss2tf(A-B*Kc-Lc*C, Lc, -Kc, 0,1); %continuous time TF from theta to control command u
-% Hc = tf(numc, denc);
-% Hd = c2d(Hc,0.1); %discrete time TF from theta to control command u
-% [numd, dend] = tfdata(Hd,'v');
 sys1 = ss(Ad-Bd*K-L*Cd,L,-K,0,0.1);
 Hd = tf(sys1);
 [numd, dend] = tfdata(Hd,'v');
 
-
 theta=x1(3)*180/pi;
     
     if rand>=alpha %packet received
-        y = theta;  %update state estimate
+        y = h*floor(theta/h+0.5);  %update state estimate
         loss=NaN;      
     else %packet lost
-        y = 0; %LZ
-        %xest = xestold; %LH
+        %y = 0; %LZ
+        y=yin(1); %LH
         loss=0;
         %disp('Packet Fake Lost');
     end
-    yout = [y yin(1) yin(2) yin(3)]
+    yout = [y yin(1) yin(2) yin(3)];
     utheta = 1/dend(1)*(numd(2)*yout(2)+numd(3)*yout(3)+numd(4)*yout(4)-dend(2)*uin(1)-dend(3)*uin(2)-dend(4)*uin(3));
     %utheta = 1/dend(1)*(numd*yout'-dend(2:end)*uin(2:end)');
-    uout = [utheta uin(1) uin(2) uin(3)]
+    uout = [utheta uin(1) uin(2) uin(3)];
     
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

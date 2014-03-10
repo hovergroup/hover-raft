@@ -194,14 +194,14 @@ currentGoal = 1;
             %thrustvec = ConstThrust(count);
             %[control1, control2, control3, xest, utheta, loss, gsim, psisim,Yk1k1,Ykk1] = HeadingControlMIF(x(:,count),xest,utheta,gsim,psisim,Yk1k1,Ykk1);
             %[control1, control2, control3, xest, utheta, loss, gsim, psisim] = HeadingControlMIFconstY(x(:,count),xest,utheta,gsim,psisim);
-            %[control1, control2, control3, xest, utheta, loss] = HeadingControlLQG(x(:,count),xest,utheta);
+            [control1, control2, control3, xest, utheta, loss] = HeadingControlLQG(x(:,count),xest,utheta);
+            uthetasave(count) = utheta;
+            xestsave(:,count) = xest;
             %---LZ, LH
-            [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(x(:,count),yout,uout);
-            xest(1,count) = yout(1);
-            utheta = uout(1);
+            %[control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(x(:,count),yout,uout);
+            %xest(1,count) = yout(1);
+            %utheta = uout(1);
             %---
-            %uthetasave(count) = utheta;
-            %xestsave(:,count) = xest;
             lossvec(count) = loss;
             thrustvec = [control1 control2 control3];
             

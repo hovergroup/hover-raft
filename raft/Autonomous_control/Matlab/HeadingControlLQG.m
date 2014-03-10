@@ -29,12 +29,13 @@ Nn = 0;
 %[kest,L,P] = kalman(sys,Qn,Rn,Nn); %L is kalman gain
 
 %LQR controller parameters
-Q = 100*eye(3);
+Q = 10000*eye(3);
 R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
+%K=2.3*K;
 alpha = 0.0;
-h=1;
+h=0.00001;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
 theta=x1(3)*180/pi;
@@ -53,7 +54,7 @@ theta=x1(3)*180/pi;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define controller gains
-offset = 50;
+offset = 30;
 thetathrust = utheta*255; %convert control command to be sent to raft
 thetathrust = round255(thetathrust,offset)+offset*sign(thetathrust); %account for deadband %pvt approves
 
