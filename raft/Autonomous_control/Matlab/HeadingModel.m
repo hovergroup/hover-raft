@@ -28,7 +28,7 @@ xlabel('Time [s]','FontSize',16)
 ylabel('Heading [deg]','FontSize',16);
 title('Q, h=10','FontSize',16)
 set(gca,'FontSize',16)
-axis([0 330 -20 20]);
+% axis([0 330 -20 20]);
 grid on
 
 
@@ -46,11 +46,11 @@ grid on
 % ylabel('Yaw rate [deg/s]');       
 % grid on 
 
-% figure
-% plot(t(20:size(c,2)-1),diff(t(20:size(c,2))),['-',color,'.'],'LineWidth',3);
-% xlabel('Time [s]')
-% ylabel('Heading Rate [deg]');       
-% grid on
+figure
+plot(t(20:size(c,2)-1),diff(t(20:size(c,2))),['-',color,'.'],'LineWidth',3);
+xlabel('Time [s]')
+ylabel('Heading Rate [deg]');       
+grid on
 
 figure
 plot(t,uthetasave,'LineWidth',3);

@@ -102,8 +102,11 @@ u = zeros(4, preallocate);
 %xdes = [394 120 0]; %xdes, ydes, thetades
 utheta = 0;
 uthetasave = zeros(1,preallocate);
-xest = [0 0 0]';
-xestsave = zeros(3,preallocate);
+% xest = [0 0 0]';
+% xestsave = zeros(3,preallocate);
+xest = [0 0]';
+xestsave = zeros(2,preallocate);
+
 lossvec = zeros(1,preallocate);
 gsim = zeros(3,1);
 psisim = zeros(3,1);
@@ -186,7 +189,15 @@ currentGoal = 1;
                     end
                 end
             end
-
+            
+            %add delay to measurement - ewg march 10 2014
+            delay = 2; %delay, in timesteps, in sensor channel
+            if count>delay
+               xdelay = x(:,count-delay); 
+            else
+                xdelay = x(:,count);
+            end
+            
             % run control loop
             IError = x(:,count) - xDesired(:,currentGoal);
             %thrustvec = headingControl(0,x(1,count),0.1);
@@ -194,15 +205,16 @@ currentGoal = 1;
             %thrustvec = ConstThrust(count);
             %[control1, control2, control3, xest, utheta, loss, gsim, psisim,Yk1k1,Ykk1] = HeadingControlMIF(x(:,count),xest,utheta,gsim,psisim,Yk1k1,Ykk1);
             %[control1, control2, control3, xest, utheta, loss, gsim, psisim] = HeadingControlMIFconstY(x(:,count),xest,utheta,gsim,psisim);
-            [control1, control2, control3, xest, utheta, loss] = HeadingControlLQG(x(:,count),xest,utheta);
-            uthetasave(count) = utheta;
-            xestsave(:,count) = xest;
+            %[control1, control2, control3, xest, utheta, loss] = HeadingControlLQG2(xdelay,xest,utheta);
+            %uthetasave(count) = utheta;
+            %xestsave(:,count) = xest;
             %---LZ, LH
-            %[control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(x(:,count),yout,uout);
-            %xest(1,count) = yout(1);
-            %utheta = uout(1);
+            [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(x(:,count),yout,uout);
+            xest(1,count) = yout(1);
+            utheta = uout(1);
+            uthetasave(count) = utheta;
             %---
-            lossvec(count) = loss;
+            %lossvec(count) = loss;
             thrustvec = [control1 control2 control3];
             
             

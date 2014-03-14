@@ -29,7 +29,7 @@ Q = 100*eye(3);
 R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
-alpha = 0.;
+alpha = 0;
 h=10; %quantization bin size
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %MIF Parameters
