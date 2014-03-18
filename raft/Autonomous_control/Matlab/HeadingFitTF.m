@@ -45,29 +45,31 @@ s=tf([1 0],1);
 %second-order system
 % a=1.4;
 % b=4;
-% K = 50*a*b;
+% K = 54*a*b;
 % sys = K/((s+a)*(s+b));
 % [ys,ts] = step(sys,4);
 
 %first order system with delay
 a=1.4;
-K=50*a;
-T = 0.3;
+K=54*a;
+T = 0.24;
+dt = 0.12;
 sys = K/(s+a)*exp(-s*T);
-[ys,ts] = step(sys,4);
+sysd = c2d(sys,dt);
+[ys,ts] = step(sysd,4);
 
 figure
 plot(tvec250,headingratevec250(20:60),'--k.',ts,ys,'-r',tvec200,headingratevec200(20:60),'--g.',tvec150,headingratevec150(20:60)+1,'--b.',tvec100,headingratevec100(20:60)+1,'--m.','LineWidth',3);
 xlabel('Time [s]','FontSize',16)
 ylabel('Heading Rate [deg/sec]','FontSize',16);
 set(gca,'FontSize',16)
-axis([0 4 0 55]);
+axis([0 4 0 60]);
 h0=legend('Heading Rate Data','Model');
 rect = [0.65, 0.27, 0.05, 0.05];
 set(h0,'Position',rect);
 grid on
 hold on
-plot(ts,ys*200/255,'-r',ts,ys*150/255,'-r',ts,ys*100/255,'-r','LineWidth',3)
+plot(ts,ys*230/255,'-r',ts,ys*180/255,'-r',ts,ys*130/255,'-r','LineWidth',3)
 
 print(gcf, '-depsc','RaftModel4')
 print(gcf, '-dpng','RaftModel4')

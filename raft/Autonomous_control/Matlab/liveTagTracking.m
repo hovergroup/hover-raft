@@ -191,12 +191,14 @@ currentGoal = 1;
             end
             
             %add delay to measurement - ewg march 10 2014
-            delay = 2; %delay, in timesteps, in sensor channel
+            delay = 0; %delay, in timesteps, in sensor channel
             if count>delay
                xdelay = x(:,count-delay); 
             else
                 xdelay = x(:,count);
             end
+            %define vector of random numbers for use in packet loss 
+            
             
             % run control loop
             IError = x(:,count) - xDesired(:,currentGoal);
@@ -209,12 +211,12 @@ currentGoal = 1;
             %uthetasave(count) = utheta;
             %xestsave(:,count) = xest;
             %---LZ, LH
-            [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(x(:,count),yout,uout);
+            [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(xdelay,yout,uout);
             xest(1,count) = yout(1);
             utheta = uout(1);
             uthetasave(count) = utheta;
             %---
-            %lossvec(count) = loss;
+            lossvec(count) = loss;
             thrustvec = [control1 control2 control3];
             
             
