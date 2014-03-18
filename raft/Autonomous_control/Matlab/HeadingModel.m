@@ -1,8 +1,8 @@
 %Script to plot step responses of heading rate to thrust input, and derive
 %transfer function model
-%EWG Hovergroup 2013 
+%EWG Hovergroup 2014 
 %egilbert@mit.edu
-close all
+%close all
 
 count =10000;
 theta0 = rad2deg(x(3,20));
@@ -18,10 +18,16 @@ headingratevec = diff(c)./diff(t(1:size(c,2)));
 % xlabel('Time [s]')
 % ylabel('Heading [deg]');       
 % grid on
-count = 1700;
-start = 200;
+count = 5000;
+start = 20;
 figure
 stairs(t(start:count)-t(start),headingvec(start:count)+theta0,['-','b','.'],'LineWidth',2);
+hold on
+u = zeros(size(t(start:count)));
+v = ones(size(t(start:count)));
+quiver(t(start:count),lossvec(start:count),u,v,0.5,'g', 'ShowArrowHead','off');
+quiver(t(start:count),lossvec(start:count),u,-v,0.5,'g','ShowArrowHead','off');
+
 %hold on 
 %plot(t(start:count),0*t(start:count)+7.5,'r',t(start:count),0*t(start:count)-7.5,'r')
 %hold on
@@ -33,10 +39,9 @@ ylabel('Heading [deg]','FontSize',16);
 %title('Q, h=10','FontSize',16)
 set(gca,'FontSize',16)
 %legend('Heading','Control Command')
-axis([0 100 -35 35]);
+%axis([0 100 -35 35]);
 grid on
-print(gcf, '-depsc','QLHNolossh10')
-
+%print(gcf, '-depsc','QLHNolossh10')
 
 
 break

@@ -1,7 +1,7 @@
 %compute thrust command for theta using LQG controller
 %EWG 2014
 
-function [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(x1,yin,uin,PacketLoss,count)
+function [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(x1,yin,uin,PacketLoss)
 %define vector of random numbers for use in packet loss (so all systems use
 %identical sequence of packet loss
 
@@ -40,8 +40,8 @@ R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
 % [Kc,Sc,ec] = lqr(A,B,Q,R,N); %continuous time parameters
- alpha = 0.0;
- h=15;
+ alpha = 0.15;
+ h=10;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
 %sys1 = ss(Ad-Bd*K-L*Cd,L,-K,0,dt); %dt was 0.1
@@ -53,12 +53,12 @@ Hd = tf(sys1);
 
 theta=x1(3)*180/pi;
     
-    if PacketLoss(count)>=alpha %packet received
+    if PacketLoss>=alpha %packet received
         y = h*floor(theta/h+0.5);  %update state estimate
         loss=NaN;      
     else %packet lost
-        y = 0; %LZ
-        %y=yin(1); %LH
+        %y = 0; %LZ
+        y=yin(1); %LH
         loss=0;
         %disp('Packet Fake Lost');
     end

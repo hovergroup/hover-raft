@@ -197,8 +197,9 @@ currentGoal = 1;
             else
                 xdelay = x(:,count);
             end
-            %define vector of random numbers for use in packet loss 
-            
+            %draw random number from fixed vector of random numbers 
+            PacketLossvec = PacketLossGen(1);
+            PacketLoss = PacketLossvec(mod(count,1999)+1);
             
             % run control loop
             IError = x(:,count) - xDesired(:,currentGoal);
@@ -211,7 +212,7 @@ currentGoal = 1;
             %uthetasave(count) = utheta;
             %xestsave(:,count) = xest;
             %---LZ, LH
-            [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(xdelay,yout,uout);
+            [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(xdelay,yout,uout,PacketLoss);
             xest(1,count) = yout(1);
             utheta = uout(1);
             uthetasave(count) = utheta;
