@@ -40,12 +40,13 @@ R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
 % [Kc,Sc,ec] = lqr(A,B,Q,R,N); %continuous time parameters
- alpha = 0.15;
- h=10;
+ alpha = 0.0;
+ h=0.0001;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
 %sys1 = ss(Ad-Bd*K-L*Cd,L,-K,0,dt); %dt was 0.1
 In = eye(size(Ad));
+%sys1 = ss((In-L*Cd)*(Ad-Bd*K),L,-K*((In-L*Cd)*(Ad-Bd*K)),-K*L,dt); %dt was 0.1
 sys1 = ss((In-L*Cd)*(Ad-Bd*K),L,-K*((In-L*Cd)*(Ad-Bd*K)),-K*L,dt); %dt was 0.1
 
 Hd = tf(sys1);
@@ -57,8 +58,8 @@ theta=x1(3)*180/pi;
         y = h*floor(theta/h+0.5);  %update state estimate
         loss=NaN;      
     else %packet lost
-        %y = 0; %LZ
-        y=yin(1); %LH
+        y = 0; %LZ
+        %y=yin(1); %LH
         loss=0;
         %disp('Packet Fake Lost');
     end

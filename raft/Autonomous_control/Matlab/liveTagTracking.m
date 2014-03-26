@@ -191,7 +191,7 @@ currentGoal = 1;
             end
             
             %add delay to measurement - ewg march 10 2014
-            delay = 0; %delay, in timesteps, in sensor channel
+            delay = 5; %delay, in timesteps, in sensor channel
             if count>delay
                xdelay = x(:,count-delay); 
             else
@@ -205,20 +205,22 @@ currentGoal = 1;
             IError = x(:,count) - xDesired(:,currentGoal);
             %thrustvec = headingControl(0,x(1,count),0.1);
             %thrustvec = raftcontrolxy3(x(:,count),v5(:,count),xDesired(:,currentGoal),IError);
-            %thrustvec = ConstThrust(count);
+            thrustvec = ConstThrust(count);
             %[control1, control2, control3, xest, utheta, loss, gsim, psisim,Yk1k1,Ykk1] = HeadingControlMIF(x(:,count),xest,utheta,gsim,psisim,Yk1k1,Ykk1);
             %[control1, control2, control3, xest, utheta, loss, gsim, psisim] = HeadingControlMIFconstY(x(:,count),xest,utheta,gsim,psisim);
-            %[control1, control2, control3, xest, utheta, loss] = HeadingControlLQG2(xdelay,xest,utheta);
+            
+            %[control1, control2, control3, xest, utheta, loss] = HeadingControlLQG2(xdelay,xest,utheta,PacketLoss);
             %uthetasave(count) = utheta;
+            
             %xestsave(:,count) = xest;
             %---LZ, LH
-            [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(xdelay,yout,uout,PacketLoss);
-            xest(1,count) = yout(1);
-            utheta = uout(1);
-            uthetasave(count) = utheta;
+            %[control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(xdelay,yout,uout,PacketLoss);
+            %xest(1,count) = yout(1);
+            %utheta = uout(1);
+            %uthetasave(count) = utheta;
             %---
-            lossvec(count) = loss;
-            thrustvec = [control1 control2 control3];
+            %lossvec(count) = loss;
+            %thrustvec = [control1 control2 control3];
             
             
             [thrust, direction] = mapToThruster(thrustvec(1), thrustvec(2), thrustvec(3), x(3,count));
