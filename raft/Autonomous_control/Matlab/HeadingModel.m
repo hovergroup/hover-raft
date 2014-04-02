@@ -39,10 +39,12 @@ ylabel('Heading [deg]','FontSize',16);
 %title('Q, h=10','FontSize',16)
 set(gca,'FontSize',16)
 %legend('Heading','Control Command')
-%axis([0 17 0 30]);
+%axis([0 50 -15 30]);
 grid on
-% print(gcf, '-depsc','ControllerStep25')
 
+% print(gcf, '-depsc','SweetSpotR11Q1_test1')
+% print(gcf, '-dpng','SweetSpotR11Q1_test1')
+% print(gcf, '-djpeg','SweetSpotR11Q1_test1')
 
 break
 
@@ -61,7 +63,7 @@ grid on
 figure
 plot(t(20:size(c,2)-1),diff(t(20:size(c,2))),['-',color,'.'],'LineWidth',3);
 xlabel('Time [s]')
-ylabel('Heading Rate [deg]');       
+ylabel('dt');       
 grid on
 
 figure
