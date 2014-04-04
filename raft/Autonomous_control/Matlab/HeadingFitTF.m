@@ -59,7 +59,7 @@ c = conv(headingvec50,window,'same')/sum(window);
  headingratevec50 = diff(c)./diff(t(1:size(c,2)));
 tvec50 = t(start:tend)-t(start);
 %%
-dt=0.105;
+dt=0.12;
 %Calculate Model
 %use fminsearch to find optimal coefficients
  weights = [1 1 4000 4000 5000];
@@ -95,35 +95,41 @@ syshead = sys/s;
 [ys,ts] = step(sys,4);
 [ysh,tsh] = step(syshead,4);
 
-figure
-plot(tvec250,headingratevec250(start:tend),'--k.',ts,ys,'-r',tvec200,headingratevec200(start:tend),'--g.',tvec150,headingratevec150(start:tend),'--b.',tvec100,headingratevec100(start:tend),'--m.',tvec50,headingratevec50(start:tend),'--c.','LineWidth',3);
-xlabel('Time [s]','FontSize',16)
-ylabel('Heading Rate [deg/sec]','FontSize',16);
-set(gca,'FontSize',16)
-axis([0 dt*(tend-start) 0 40]);
-h0=legend('Heading Rate Data','Model');
-rect = [0.65, 0.17, 0.05, 0.05];
-set(h0,'Position',rect);
-grid on
-hold on
-plot(ts,ys*230/255,'-r',ts,ys*180/255,'-r',ts,ys*130/255,'-r',ts,ys*80/255,'-r','LineWidth',3)
+% figure
+% plot(tvec250,headingratevec250(start:tend),'--k.',ts,ys,'-r',tvec200,headingratevec200(start:tend),'--g.',tvec150,headingratevec150(start:tend),'--b.',tvec100,headingratevec100(start:tend),'--m.',tvec50,headingratevec50(start:tend),'--c.','LineWidth',3);
+% xlabel('Time [s]','FontSize',16)
+% ylabel('Heading Rate [deg/sec]','FontSize',16);
+% set(gca,'FontSize',16)
+% axis([0 dt*(tend-start) 0 40]);
+% h0=legend('Heading Rate Data','Model');
+% rect = [0.65, 0.17, 0.05, 0.05];
+% set(h0,'Position',rect);
+% grid on
+% hold on
+% plot(ts,ys*230/255,'-r',ts,ys*180/255,'-r',ts,ys*130/255,'-r',ts,ys*80/255,'-r','LineWidth',3)
 
 % print(gcf, '-depsc','RaftModel7')
 % print(gcf, '-dpng','RaftModel7')
 % print(gcf, '-djpeg','RaftModel7')
 
+%-----------------------------------------------
 figure
-plot(tvec250,headingvec250(start:tend),'--k.',tsh,ysh,'-r',tvec200,headingvec200(start:tend),'--g.',tvec150,headingvec150(start:tend),'--b.',tvec100,headingvec100(start:tend),'--m.',tvec50,headingvec50(start:tend),'--c.','LineWidth',3);
+%plot(tvec250,headingvec250(start:tend),'--k.',tsh,ysh,'-r',tvec200,headingvec200(start:tend),'--g.',tvec150,headingvec150(start:tend),'--b.',tvec100,headingvec100(start:tend),'--m.',tvec50,headingvec50(start:tend),'--c.','LineWidth',3);
+plot(tvec200,headingvec200(start:tend),'--k.',tsh,ysh*230/255,'-r',tvec150,headingvec150(start:tend),'--b.',tvec100,headingvec100(start:tend),'--m.',tvec50,headingvec50(start:tend),'--c.','LineWidth',3);
 xlabel('Time [s]','FontSize',16)
 ylabel('Heading [deg]','FontSize',16);
 set(gca,'FontSize',16)
-axis([0 dt*(tend-start) 0 20]);
-h0=legend('Heading Rate Data','Model');
-rect = [0.65, 0.17, 0.05, 0.05];
+axis([0 1 0 15]);
+h0=legend('Heading Data','Model');
+rect = [0.45, 0.6, 0.05, 0.05];
 set(h0,'Position',rect);
 grid on
 hold on
-plot(tsh,ysh*230/255,'-r',tsh,ysh*180/255,'-r',tsh,ysh*130/255,'-r',tsh,ysh*80/255,'-r','LineWidth',3)
+plot(tsh,ysh*180/255,'-r',tsh,ysh*130/255,'-r',tsh,ysh*80/255,'-r','LineWidth',3)
+print(gcf, '-depsc','RaftModel8')
+print(gcf, '-dpng','RaftModel8')
+print(gcf, '-djpeg','RaftModel8')
+%--------------------------------------------------
 
 % 
 % K=220;

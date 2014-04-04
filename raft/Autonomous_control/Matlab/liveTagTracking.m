@@ -108,13 +108,14 @@ xest = zeros(5,1);
 xestsave = zeros(size(xest,1),preallocate);
 
 lossvec = zeros(1,preallocate);
-gsim = zeros(3,1);
-psisim = zeros(3,1);
-Yk1k1 = eye(3,3);
-Ykk1 = eye(3,3);
-uout = zeros(1,4);
-yout = zeros(1,4);
-
+gsim = zeros(5,1);
+psisim = zeros(5,1);
+Yk1k1 = eye(5,5);
+Ykk1 = eye(5,5);
+%uout = zeros(1,4);
+uout = zeros(1,6);
+%yout = zeros(1,4);
+yout = zeros(1,6);
 %% Goals
 % xDesired(:,1) = [200 300 -pi/2]';   % hold point
 % xDesired(:,2) = [600 300 -pi/2]';   % hold point
@@ -191,7 +192,7 @@ currentGoal = 1;
             end
             
             %add delay to measurement - ewg march 10 2014
-            delay = 3; %delay, in timesteps, in sensor channel
+            delay = 0; %delay, in timesteps, in sensor channel
             if count>delay
                xdelay = x(:,count-delay); 
             else
@@ -207,17 +208,16 @@ currentGoal = 1;
             %thrustvec = raftcontrolxy3(x(:,count),v5(:,count),xDesired(:,currentGoal),IError);
             %thrustvec = ConstThrust(count);
             %[control1, control2, control3, xest, utheta, loss, gsim, psisim,Yk1k1,Ykk1] = HeadingControlMIF(x(:,count),xest,utheta,gsim,psisim,Yk1k1,Ykk1);
-            %[control1, control2, control3, xest, utheta, loss, gsim, psisim] = HeadingControlMIFconstY(x(:,count),xest,utheta,gsim,psisim);
+            [control1, control2, control3, xest, utheta, loss, gsim, psisim] = HeadingControlMIFconstY2(xdelay,xest,utheta,gsim,psisim);
             
-            [control1, control2, control3, xest, utheta, loss] = HeadingControlLQG2(xdelay,xest,utheta,PacketLoss);
+%             [control1, control2, control3, xest, utheta, loss] = HeadingControlLQG2(xdelay,xest,utheta,PacketLoss);
             uthetasave(count) = utheta;
-            
             xestsave(:,count) = xest;
             %---LZ, LH
-            %[control1, control2, control3, yout, uout, loss] = HeadingControlLZLH(xdelay,yout,uout,PacketLoss);
-            %xest(1,count) = yout(1);
-            %utheta = uout(1);
-            %uthetasave(count) = utheta;
+%             [control1, control2, control3, yout, uout, loss] = HeadingControlLZLH2(xdelay,yout,uout,PacketLoss);
+%             xest(1,count) = yout(1);
+%             utheta = uout(1);
+%             uthetasave(count) = utheta;
             %---
             lossvec(count) = loss;
             thrustvec = [control1 control2 control3];
