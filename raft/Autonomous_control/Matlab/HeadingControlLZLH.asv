@@ -40,8 +40,8 @@ R = 1;
 N = 0;
 [K,S,e] = dlqr(Ad,Bd,Q,R,N); %K is controller gain
 % [Kc,Sc,ec] = lqr(A,B,Q,R,N); %continuous time parameters
- alpha = 0.0;
- h=0.0001;
+ alpha = 0.25;
+ h=6;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %define input parameters
 %sys1 = ss(Ad-Bd*K-L*Cd,L,-K,0,dt); %dt was 0.1
@@ -55,17 +55,17 @@ Hd = tf(sys1);
 theta=x1(3)*180/pi;
     
     if PacketLoss>=alpha %packet received
-        y = h*floor(theta/h+0.5);  %update state estimate
+        y = 1.08*h*floor(theta/h+0.5);  %update state estimate
         loss=NaN;      
     else %packet lost
-        y = 0; %LZ
-        %y=yin(1); %LH
+        %y = 0; %LZ
+        y=0.96*yin(1); %LH
         loss=0;
         %disp('Packet Fake Lost');
     end
     yout = [y yin(1) yin(2) yin(3)];
     %utheta = 1/dend(1)*(numd(1)*yout(1)+numd(2)*yout(2)+numd(3)*yout(3)+numd(4)*yout(4)-dend(2)*uin(1)-dend(3)*uin(2)-dend(4)*uin(3));
-    utheta = 1/dend(1)*(numd(1)*yout(1)+numd(2)*yout(2)+numd(3)*yout(3)-dend(2)*uin(1)-dend(3)*uin(2));
+    utheta = 1*1/dend(1)*(numd(1)*yout(1)+numd(2)*yout(2)+numd(3)*yout(3)-dend(2)*uin(1)-dend(3)*uin(2));
     
     %utheta = 1/dend(1)*(numd*yout'-dend(2:end)*uin(2:end)');
     uout = [utheta uin(1) uin(2) uin(3)];

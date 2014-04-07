@@ -2,8 +2,8 @@
 %transfer function model
 %EWG Hovergroup 2014 
 %egilbert@mit.edu
-%close all
-
+close all
+%load('C:\Users\bubba\Dropbox\data\TestsStartingApril2\QLHtesth6alpha35_test1.mat')
 count =10000;
 theta0 = rad2deg(x(3,20));
 headingvec = rad2deg(x(3,1:count))-theta0;
@@ -18,33 +18,33 @@ headingratevec = diff(c)./diff(t(1:size(c,2)));
 % xlabel('Time [s]')
 % ylabel('Heading [deg]');       
 % grid on
-count = 10000;
+count =3000;
 start = 20;
 figure
-stairs(t(start:count)-t(start),(headingvec(start:count)+theta0),['-','b','.'],'LineWidth',2);
+stairs(t(start:count)-t(start),1/3*(headingvec(start:count)+theta0),['-','b','.'],'LineWidth',2);
 hold on
 u = zeros(size(t(start:count)));
 v = ones(size(t(start:count)));
-quiver(t(start:count),lossvec(start:count),u,v,0.5,'g', 'ShowArrowHead','off');
-quiver(t(start:count),lossvec(start:count),u,-v,0.5,'g','ShowArrowHead','off');
+quiver(t(start:count),lossvec(start:count),u,v,0.05,'r', 'ShowArrowHead','off');
+quiver(t(start:count),lossvec(start:count),u,-v,0.05,'r','ShowArrowHead','off');
 
 %hold on 
 %plot(t(start:count),0*t(start:count)+7.5,'r',t(start:count),0*t(start:count)-7.5,'r')
-hold on
-stairs(t(20:count),uthetasave(20:count),'r','LineWidth',2)
+% hold on
+% stairs(t(20:count),uthetasave(20:count),'r','LineWidth',2)
 %plot(t(20:count),0*t(20:count)+5,'r',t(20:count),0*t(20:count)-5,'r')
 %plot(t(1:size(c,2)-2),c(1:size(c,2)-2)+theta0,'-b.','LineWidth',3);
 xlabel('Time [s]','FontSize',16)
-ylabel('Heading [deg]','FontSize',16);
+ylabel('Normalized Heading','FontSize',16);
 %title('Q, h=10','FontSize',16)
 set(gca,'FontSize',16)
 %legend('Heading','Control Command')
-%axis([0 50 -15 30]);
+%axis([221 242 -1.0 1.5]);
 grid on
-
-% print(gcf, '-depsc','SweetSpotR11Q1_test1')
-% print(gcf, '-dpng','SweetSpotR11Q1_test1')
-% print(gcf, '-djpeg','SweetSpotR11Q1_test1')
+% 
+% print(gcf, '-depsc','DesignControl1')
+% print(gcf, '-dpng','DesignControl1')
+% print(gcf, '-djpeg','DesignControl1')
 
 break
 
