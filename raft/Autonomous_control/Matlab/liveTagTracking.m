@@ -192,7 +192,7 @@ currentGoal = 1;
             end
             
             %add delay to measurement - ewg march 10 2014
-            delay = 3; %delay, in timesteps, in sensor channel
+            delay = 1; %delay, in timesteps, in sensor channel
             if count>delay
                xdelay = x(:,count-delay); 
             else
