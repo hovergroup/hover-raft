@@ -28,6 +28,7 @@
 	<Property Name="varPersistentID:{55D716F6-1C10-4900-A5E6-353BCF116CF4}" Type="Ref">/NI-cRIO9073-014A8BBB/Chassis/Mod5/AI1</Property>
 	<Property Name="varPersistentID:{5772CA85-8D95-4A09-B000-9EB2D7380099}" Type="Ref">/NI-cRIO9073-014A8BBB/Chassis/Mod5/AI30</Property>
 	<Property Name="varPersistentID:{59D4E0D3-1951-4972-8749-424B5A723EC5}" Type="Ref">/NI-cRIO9073-014A8BBB/Chassis/Mod6/TC2</Property>
+	<Property Name="varPersistentID:{5CBFCF39-554D-4645-ADE0-0DC1E3A57E54}" Type="Ref">/My Computer/variables - host.lvlib/FTarray</Property>
 	<Property Name="varPersistentID:{5DF368A5-C09B-4525-A9ED-CA459900BF14}" Type="Ref">/NI-cRIO9073-014A8BBB/Chassis/Mod6/TC7</Property>
 	<Property Name="varPersistentID:{660D6DFA-0BAB-44BD-B71C-3100CDED8103}" Type="Ref">/NI-cRIO9073-014A8BBB/Chassis/Mod5/AI11</Property>
 	<Property Name="varPersistentID:{68044B1A-04FE-4BCE-B197-AF4A57D3D0CE}" Type="Ref">/NI-cRIO9073-014A8BBB/Chassis/Mod6/TC10</Property>
@@ -86,7 +87,12 @@
 		<Property Name="server.vi.callsEnabled" Type="Bool">true</Property>
 		<Property Name="server.vi.propertiesEnabled" Type="Bool">true</Property>
 		<Property Name="specify.custom.address" Type="Bool">false</Property>
+		<Item Name="compliant arm.vi" Type="VI" URL="../../../ECAarm/LabView/labview2010/compliant arm.vi"/>
+		<Item Name="demandPicker.vi" Type="VI" URL="../../../ECAarm/LabView/labview2010/demandPicker.vi"/>
 		<Item Name="host - network - RT (separate).vi" Type="VI" URL="../host - network - RT (separate).vi"/>
+		<Item Name="host v2.vi" Type="VI" URL="../../../ECAarm/LabView/labview2010/host v2.vi"/>
+		<Item Name="packetMaker.vi" Type="VI" URL="../../../ECAarm/LabView/labview2010/packetMaker.vi"/>
+		<Item Name="variables - host.lvlib" Type="Library" URL="../../../ECAarm/LabView/labview2010/variables - host.lvlib"/>
 		<Item Name="Dependencies" Type="Dependencies">
 			<Item Name="vi.lib" Type="Folder">
 				<Item Name="__closeStorageFromObject.vi" Type="VI" URL="/&lt;vilib&gt;/Platform/storage/Storage.llb/__closeStorageFromObject.vi"/>
@@ -332,6 +338,9 @@
 				<Item Name="usiSequenceRepresentation.ctl" Type="VI" URL="/&lt;vilib&gt;/Platform/storage/Storage.llb/usiSequenceRepresentation.ctl"/>
 				<Item Name="usiTypeDef.ctl" Type="VI" URL="/&lt;vilib&gt;/Platform/storage/Storage.llb/usiTypeDef.ctl"/>
 				<Item Name="usiValueFlags.ctl" Type="VI" URL="/&lt;vilib&gt;/Platform/storage/Storage.llb/usiValueFlags.ctl"/>
+				<Item Name="VISA Configure Serial Port" Type="VI" URL="/&lt;vilib&gt;/Instr/_visa.llb/VISA Configure Serial Port"/>
+				<Item Name="VISA Configure Serial Port (Instr).vi" Type="VI" URL="/&lt;vilib&gt;/Instr/_visa.llb/VISA Configure Serial Port (Instr).vi"/>
+				<Item Name="VISA Configure Serial Port (Serial Instr).vi" Type="VI" URL="/&lt;vilib&gt;/Instr/_visa.llb/VISA Configure Serial Port (Serial Instr).vi"/>
 				<Item Name="Waveform Array To Dynamic.vi" Type="VI" URL="/&lt;vilib&gt;/express/express shared/transition.llb/Waveform Array To Dynamic.vi"/>
 				<Item Name="WDT Number of Waveform Samples CDB.vi" Type="VI" URL="/&lt;vilib&gt;/Waveform/WDTOps.llb/WDT Number of Waveform Samples CDB.vi"/>
 				<Item Name="WDT Number of Waveform Samples DBL.vi" Type="VI" URL="/&lt;vilib&gt;/Waveform/WDTOps.llb/WDT Number of Waveform Samples DBL.vi"/>
@@ -343,7 +352,10 @@
 				<Item Name="whitespace.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/whitespace.ctl"/>
 				<Item Name="Write File+ (string).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/file.llb/Write File+ (string).vi"/>
 			</Item>
-			<Item Name="lvanlys.dll" Type="Document" URL="../../../../../../../../Program Files (x86)/National Instruments/LabVIEW 2010/resource/lvanlys.dll"/>
+			<Item Name="lvanlys.dll" Type="Document" URL="../../../../../../Program Files (x86)/National Instruments/LabVIEW 2010/resource/lvanlys.dll"/>
+			<Item Name="lvStorage.dll" Type="Document" URL="lvStorage.dll">
+				<Property Name="NI.PreserveRelativePath" Type="Bool">true</Property>
+			</Item>
 		</Item>
 		<Item Name="Build Specifications" Type="Build"/>
 	</Item>
@@ -1654,9 +1666,7 @@
 		<Item Name="support - acquire data.vi" Type="VI" URL="../support - acquire data.vi"/>
 		<Item Name="target - multi rate - variables.vi" Type="VI" URL="../target - multi rate - variables.vi"/>
 		<Item Name="variables - network - RT (separate).lvlib" Type="Library" URL="../variables - network - RT (separate).lvlib"/>
-		<Item Name="Dependencies" Type="Dependencies">
-			<Item Name="XDNodeRunTimeDep.lvlib" Type="Library" URL="/&lt;vilib&gt;/Platform/TimedLoop/XDataNode/XDNodeRunTimeDep.lvlib"/>
-		</Item>
+		<Item Name="Dependencies" Type="Dependencies"/>
 		<Item Name="Build Specifications" Type="Build"/>
 	</Item>
 </Project>
