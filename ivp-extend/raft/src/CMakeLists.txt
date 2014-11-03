@@ -16,6 +16,7 @@ INCLUDE_DIRECTORIES(${LOCAL_LIBRARY_DIRS})
 # List the subdirectories to build...
 #============================================================================
 
+ADD_SUBDIRECTORY(iRaftRoboteq)
 
 IF(BUILD_SHORE_APPS)
     ADD_SUBDIRECTORY(testing_app)

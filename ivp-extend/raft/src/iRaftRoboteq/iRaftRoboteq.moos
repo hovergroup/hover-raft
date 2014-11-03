@@ -1,0 +1,9 @@
+//------------------------------------------------
+// iRaftRoboteq config block
+
+ProcessConfig = iRaftRoboteq
+{
+   AppTick   = 4
+   CommsTick = 4
+}
+
