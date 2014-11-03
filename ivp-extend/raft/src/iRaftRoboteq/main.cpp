@@ -43,11 +43,9 @@ int main(int argc, char *argv[])
   cout << "iRaftRoboteq launching as " << run_command << endl;
   cout << termColor() << endl;
 
-  boost::asio::io_service io_service;
+  RaftRoboteq roboteq;
 
-  RaftRoboteq RaftRoboteq(io_service);
-
-  RaftRoboteq.Run(run_command.c_str(), mission_file.c_str());
+  roboteq.Run(run_command.c_str(), mission_file.c_str());
   
   return(0);
 }

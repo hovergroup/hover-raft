@@ -14,8 +14,10 @@ using namespace std;
 //---------------------------------------------------------
 // Constructor
 
-RaftRoboteq::RaftRoboteq(boost::asio::io_service& io_service) :
-    socket_(io_service)
+RaftRoboteq::RaftRoboteq() :
+    stopped_(false),
+    socket_(io_service_),
+    deadline_(io_service_)
 {
     m_iterations = 0;
     m_timewarp = 1;
@@ -44,12 +46,7 @@ bool RaftRoboteq::OnNewMail(MOOSMSG_LIST &NewMail) {
 // Procedure: OnConnectToServer
 
 bool RaftRoboteq::OnConnectToServer() {
-    // register for variables here
-    // possibly look at the mission file?
-    // m_MissionReader.GetConfigurationParam("Name", <string>);
-    // m_Comms.Register("VARNAME", 0);
 
-    RegisterVariables();
     return (true);
 }
 
@@ -58,7 +55,12 @@ bool RaftRoboteq::OnConnectToServer() {
 //            happens AppTick times per second
 
 bool RaftRoboteq::Iterate() {
+    if (stopped_)
+        return false;
+
+    cout << m_iterations << endl;
     m_iterations++;
+
     return (true);
 }
 
@@ -93,14 +95,54 @@ bool RaftRoboteq::OnStartUp() {
     if (myError)
         return false;
 
-    RegisterVariables();
+    start_read();
+
+    worker_thread = boost::thread(boost::bind(&RaftRoboteq::run, this));
+
+
+//    io_service_.post(boost::bind(&RaftRoboteq::start_read, this, _1));
+//    worker_threads.create_thread(
+//            boost::bind(&boost::asio::io_service::run, this, &io_service_));
+
     return (true);
 }
 
-//---------------------------------------------------------
-// Procedure: RegisterVariables
-
-void RaftRoboteq::RegisterVariables() {
-    // m_Comms.Register("FOOBAR", 0);
+void RaftRoboteq::run() {
+    io_service_.run();
 }
 
+void RaftRoboteq::stop() {
+    stopped_ = true;
+    socket_.close();
+    deadline_.cancel();
+}
+
+void RaftRoboteq::start_read() {
+    deadline_.expires_from_now(boost::posix_time::seconds(60));
+
+    boost::asio::async_read_until(socket_, input_buffer_, '\n',
+            boost::bind(&RaftRoboteq::handle_read, this, _1));
+}
+
+void RaftRoboteq::handle_read(const boost::system::error_code& ec) {
+    if (stopped_)
+        return;
+
+    if (!ec) {
+        // Extract the newline-delimited message from the buffer.
+        std::string line;
+        std::istream is(&input_buffer_);
+        std::getline(is, line);
+
+        // Empty messages are heartbeats and so ignored.
+        if (!line.empty()) {
+            std::cout << "Received: " << line << "\n";
+        }
+
+        start_read();
+    } else {
+        std::cout << "Error on receive: " << ec.message() << "\n";
+
+        stop();
+    }
+}
