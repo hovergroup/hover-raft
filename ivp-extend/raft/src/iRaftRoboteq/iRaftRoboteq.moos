@@ -7,7 +7,7 @@ ProcessConfig = iRaftRoboteq
    AppTick   = 4
    CommsTick = 4
    
-   address = 192.168.1.50
+   address = 192.168.1.51
    port = 50001
 }
 

@@ -67,14 +67,14 @@ bool RaftRoboteq::Iterate() {
 //            happens before connection is open
 
 bool RaftRoboteq::OnStartUp() {
-    string address = "192.168.1.50";
+    string address = "192.168.1.51";
     unsigned int port = 50001;
     m_MissionReader.GetConfigurationParam("address", address);
     m_MissionReader.GetConfigurationParam("port", port);
 
     boost::system::error_code myError;
     boost::asio::ip::address_v4 targetIP;
-    targetIP.from_string(address, myError);
+    targetIP = boost::asio::ip::address_v4::from_string(address, myError);
     cout << "GetIP - " << myError.message() << endl;
     if (myError)
         return false;
