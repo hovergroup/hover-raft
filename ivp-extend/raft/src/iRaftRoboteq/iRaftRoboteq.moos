@@ -1,9 +1,13 @@
-//------------------------------------------------
-// iRaftRoboteq config block
+ServerHost = localhost
+ServerPort = 9000
+Community = raft
 
 ProcessConfig = iRaftRoboteq
 {
    AppTick   = 4
    CommsTick = 4
+   
+   address = 192.168.1.50
+   port = 50001
 }
 
