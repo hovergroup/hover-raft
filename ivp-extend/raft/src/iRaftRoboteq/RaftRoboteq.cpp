@@ -98,6 +98,7 @@ bool RaftRoboteq::OnStartUp() {
 
     sock.connect(*iterator);
 
+    start_read();
     io_thread = boost::thread(boost::bind(&RaftRoboteq::io_loop, this));
 
     return (true);
