@@ -83,9 +83,9 @@ bool RaftRoboteq::OnStartUp() {
         return false;
     }
 
-    memset((char *) &m_server_address, 0, sizeof(m_server_address));
+    bzero((char *) &m_server_address, sizeof(m_server_address));
     m_server_address.sin_family = AF_INET;
-    memcpy((char *) m_server->h_addr,
+    bcopy((char *) m_server->h_addr,
             (char *)&m_server_address.sin_addr.s_addr,
             m_server->h_length);
     m_server_address.sin_port = htons(port);
