@@ -16,6 +16,8 @@
 #include <netdb.h>
 #include <errno.h>
 
+#include <boost/asio.hpp>
+
 #include <iostream>
 #include <string.h>
 
@@ -31,6 +33,13 @@ protected:
     bool OnStartUp();
 
 private:
+    boost::asio::io_service io_service;
+    boost::asio::ip::tcp::socket sock;
+
+//    boost::thread io_thread;
+//    boost::asio::deadline_timer timeout;
+
+
     int m_tcp_sockfd;
     std::vector<char> tcpReadBuffer;
     std::string string_buffer;
