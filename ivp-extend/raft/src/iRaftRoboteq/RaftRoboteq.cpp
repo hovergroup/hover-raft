@@ -54,10 +54,15 @@ bool RaftRoboteq::OnConnectToServer() {
 //            happens AppTick times per second
 
 bool RaftRoboteq::Iterate() {
-    int n = sock.read_some(boost::asio::buffer(tcpReadBuffer, 100));
-    if (n > 0) {
-        cout << string(tcpReadBuffer.begin(), tcpReadBuffer.begin() += n) << endl;
-    }
+    boost::system::error_code error;
+    boost::asio::streambuf response;
+    boost::asio::read_until(sock, response, "\n");
+    //int n = sock.read_some(boost::asio::buffer(tcpReadBuffer, 100));
+    //if (n > 0) {
+    std::istream response_stream(&response);
+    cout << response_stream.rdbuf();
+        //cout << string(tcpReadBuffer.begin(), tcpReadBuffer.begin() += n) << endl;
+    //}
 
 //    ssize_t n = recv(m_tcp_sockfd, (void*)&tcpReadBuffer[0], 1000, 0);
 //    //int n = read(m_tcp_sockfd, &tcpReadBuffer[0], 1000);
