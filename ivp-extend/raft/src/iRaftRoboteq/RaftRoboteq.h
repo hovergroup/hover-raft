@@ -32,11 +32,8 @@ protected:
 
 private:
     int m_tcp_sockfd;
-
-private:
-    // State variables
-    unsigned int m_iterations;
-    double m_timewarp;
+    std::vector<char> tcpReadBuffer;
+    std::string string_buffer;
 };
 
 #endif 

@@ -15,8 +15,7 @@ using namespace std;
 // Constructor
 
 RaftRoboteq::RaftRoboteq() {
-    m_iterations = 0;
-    m_timewarp = 1;
+    tcpReadBuffer = vector<char>(1000, 0);
 }
 
 //---------------------------------------------------------
@@ -51,9 +50,18 @@ bool RaftRoboteq::OnConnectToServer() {
 //            happens AppTick times per second
 
 bool RaftRoboteq::Iterate() {
+    int n = read(m_tcp_sockfd, &tcpReadBuffer[0], 1000);
+    if (n < 0) {
+        std::cout << "error reading from socket" << std::endl;
+        return false;
+    }
+    if (n > 0) {
+        string_buffer += std::string(tcpReadBuffer.begin(),
+                tcpReadBuffer.begin() += n);
 
-    cout << m_iterations << endl;
-    m_iterations++;
+        cout << string_buffer;
+        string_buffer.empty();
+    }
 
     return (true);
 }
