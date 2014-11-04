@@ -91,8 +91,9 @@ bool RaftRoboteq::OnStartUp() {
     m_server_address.sin_port = htons(port);
     if (connect(m_tcp_sockfd, (struct sockaddr *) &m_server_address,
             sizeof(m_server_address)) < 0) {
+        int errsv = errno;
         std::cout << "error connecting" << std::endl;
-        cout << errno << endl;
+        cout << errsv << endl;
         return false;
     }
 
