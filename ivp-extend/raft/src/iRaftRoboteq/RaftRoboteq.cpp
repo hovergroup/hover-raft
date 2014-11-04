@@ -152,6 +152,7 @@ void RaftRoboteq::handle_read(const boost::system::error_code& ec) {
 
 void RaftRoboteq::start_write() {
     string slow_query = slow_queries[slow_query_index] + "?P\n";
+    cout << "Writing " << slow_query << endl;
     boost::asio::async_write(sock, boost::asio::buffer(slow_query, slow_query.size()),
             boost::bind(&RaftRoboteq::handle_write, this, _1));
 
@@ -171,9 +172,10 @@ void RaftRoboteq::handle_write(const boost::system::error_code& ec) {
 }
 
 void RaftRoboteq::setThrust(int channel, double thrust) {
-    int power = thrust * 10.0;
+    int power = -thrust * 10.0;
     char command [100];
     int n = sprintf(command, "!G %d %d\n", channel, power);
+    cout << "Writing " << command << endl;
     boost::asio::async_write(sock, boost::asio::buffer(command, n),
             boost::bind(&RaftRoboteq::handle_command_write, this, _1));
 }
@@ -190,6 +192,7 @@ void RaftRoboteq::setArmPower(bool power) {
 }
 
 void RaftRoboteq::parseLine(string line) {
+    cout << "parsing " << line << endl;
     switch (line[0]) {
     case 'V':
         int v1, v2, v3;
@@ -200,22 +203,22 @@ void RaftRoboteq::parseLine(string line) {
     case 'A':
         int a1, a2;
         sscanf(line.c_str(), "A=%d:%d", &a1, &a2);
-        m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_LEFT", a1/10.0);
-        m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_RIGHT", a2/10.0);
+        m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_RIGHT", a1/10.0);
+        m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_LEFT", a2/10.0);
         break;
 
     case 'B':
-        int b1;
-        sscanf(line.c_str(), "BA=%d", &b1);
-        m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT", b1/10.0);
+        int b1, b2;
+        sscanf(line.c_str(), "BA=%d:%d", &b1, &b2);
+        m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_RIGHT", b1/10.0);
+        m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_LEFT", b2/10.0);
         break;
 
     case 'T':
-        int tm, t1, t2;
-        sscanf(line.c_str(), "T=%d,%d,%d", &tm, &t1, &t2);
-        m_Comms.Notify("ROBOTEQ_IC_TEMPERATURE", tm/10.0);
-        m_Comms.Notify("ROBOTEQ_TEMPERATURE_LEFT", t1/10.0);
-        m_Comms.Notify("ROBOTEQ_TEMPERATURE_RIGHT", t2/10.0);
+        int t1, t2;
+        sscanf(line.c_str(), "T=%d:%d", &t1, &t2);
+        m_Comms.Notify("ROBOTEQ_TEMPERATURE_RIGHT", t1/10.0);
+        m_Comms.Notify("ROBOTEQ_TEMPERATURE_LEFT", t2/10.0);
         break;
 
     case 'D':
@@ -226,7 +229,7 @@ void RaftRoboteq::parseLine(string line) {
 
     case 'P':
         int p1, p2;
-        sscanf(line.c_str(), "P=%d,%d", &p1, &p2);
+        sscanf(line.c_str(), "P=%d:%d", &p1, &p2);
         m_Comms.Notify("ROBOTEQ_POWER_LEFT", p1);
         m_Comms.Notify("ROBOTEQ_POWER_RIGHT", p2);
         power_report_count++;
