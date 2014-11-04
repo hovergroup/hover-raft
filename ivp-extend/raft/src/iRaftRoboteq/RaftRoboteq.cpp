@@ -64,7 +64,7 @@ bool RaftRoboteq::Iterate() {
 
 bool RaftRoboteq::OnStartUp() {
     string address = "192.168.1.51";
-    unsigned int port = 50001;
+    unsigned int port = 5001;
     m_MissionReader.GetConfigurationParam("address", address);
     m_MissionReader.GetConfigurationParam("port", port);
 
@@ -86,12 +86,13 @@ bool RaftRoboteq::OnStartUp() {
     memset((char *) &m_server_address, 0, sizeof(m_server_address));
     m_server_address.sin_family = AF_INET;
     memcpy((char *) m_server->h_addr,
-    (char *)&m_server_address.sin_addr.s_addr,
-    m_server->h_length);
+            (char *)&m_server_address.sin_addr.s_addr,
+            m_server->h_length);
     m_server_address.sin_port = htons(port);
     if (connect(m_tcp_sockfd, (struct sockaddr *) &m_server_address,
             sizeof(m_server_address)) < 0) {
         std::cout << "error connecting" << std::endl;
+        cout << errno << endl;
         return false;
     }
 
