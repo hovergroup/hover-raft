@@ -36,11 +36,13 @@ private:
     void io_loop();
 
     void start_read();
-    void handle_read(const boost::system::error_code& ec);
+    void handle_read(const boost::system::error_code& ec, std::size_t bt);
     void start_write();
     void handle_write(const boost::system::error_code& ec);
     void handle_command_write(const boost::system::error_code& ec);
     void handle_eca_power_write(const boost::system::error_code& ec);
+    
+    std::istream& safeGetline(std::istream& is, std::string& t);
 
     void parseLine(std::string line);
     void setThrust(int channel, double thrust);

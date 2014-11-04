@@ -20,11 +20,11 @@ using namespace boost::asio;
 RaftRoboteq::RaftRoboteq() :
                 sock(io_service),
                 deadline_timer(io_service) {
-    slow_queries.push_back("?V\n");
-    slow_queries.push_back("?T\n");
-    slow_queries.push_back("?A\n");
-    slow_queries.push_back("?BA\n");
-    slow_queries.push_back("?DI 1\n");
+    slow_queries.push_back("?V\r");
+    slow_queries.push_back("?T\r");
+    slow_queries.push_back("?A\r");
+    slow_queries.push_back("?BA\r");
+    slow_queries.push_back("?DI 1\r");
     slow_query_index = 0;
 
     power_report_count = 0;
@@ -101,8 +101,10 @@ bool RaftRoboteq::OnStartUp() {
 
     sock.connect(*iterator);
 
-    start_read();
+    boost::asio::async_write(sock, boost::asio::buffer("^ECHOF 1\r", 9),
+            boost::bind(&RaftRoboteq::handle_eca_power_write, this, _1));
     start_write();
+    start_read();
     io_thread = boost::thread(boost::bind(&RaftRoboteq::io_loop, this));
 
     return (true);
@@ -131,18 +133,19 @@ void RaftRoboteq::handle_command_write(const boost::system::error_code& ec) {
 }
 
 void RaftRoboteq::start_read() {
-    boost::asio::async_read_until(sock, input_buffer, '\n',
-            boost::bind(&RaftRoboteq::handle_read, this, _1));
+    boost::asio::async_read_until(sock, input_buffer, '\r',
+            boost::bind(&RaftRoboteq::handle_read, this, _1, _2));
 }
 
-void RaftRoboteq::handle_read(const boost::system::error_code& ec) {
+void RaftRoboteq::handle_read(const boost::system::error_code& ec, std::size_t bt) {
     if (!ec) {
-        // Extract the newline-delimited message from the buffer.
+        // construct istream from boost streambuf
         std::string line;
         std::istream is(&input_buffer);
-        std::getline(is, line);
-
-        parseLine(line);
+	//std::getline(is, line);
+	safeGetline(is, line);
+	
+	parseLine(line);
 
         start_read();
     } else {
@@ -150,9 +153,41 @@ void RaftRoboteq::handle_read(const boost::system::error_code& ec) {
     }
 }
 
+std::istream& RaftRoboteq::safeGetline(std::istream& is, std::string& t)
+{
+    t.clear();
+
+    // The characters in the stream are read one-by-one using a std::streambuf.
+    // That is faster than reading them one-by-one using the std::istream.
+    // Code that uses streambuf this way must be guarded by a sentry object.
+    // The sentry object performs various tasks,
+    // such as thread synchronization and updating the stream state.
+
+    std::istream::sentry se(is, true);
+    std::streambuf* sb = is.rdbuf();
+
+    for(;;) {
+        int c = sb->sbumpc();
+        switch (c) {
+        case '\n':
+            return is;
+        case '\r':
+            if(sb->sgetc() == '\n')
+                sb->sbumpc();
+            return is;
+        case EOF:
+            // Also handle the case when the last line has no line ending
+            if(t.empty())
+                is.setstate(std::ios::eofbit);
+            return is;
+        default:
+            t += (char)c;
+        }
+    }
+}
+
 void RaftRoboteq::start_write() {
-    string slow_query = slow_queries[slow_query_index] + "?P\n";
-    cout << "Writing " << slow_query << endl;
+    string slow_query = slow_queries[slow_query_index] + "?P\r";
     boost::asio::async_write(sock, boost::asio::buffer(slow_query, slow_query.size()),
             boost::bind(&RaftRoboteq::handle_write, this, _1));
 
@@ -164,7 +199,7 @@ void RaftRoboteq::start_write() {
 
 void RaftRoboteq::handle_write(const boost::system::error_code& ec) {
     if (!ec) {
-        deadline_timer.expires_from_now(boost::posix_time::milliseconds(20));
+        deadline_timer.expires_from_now(boost::posix_time::milliseconds(10));
         deadline_timer.async_wait(boost::bind(&RaftRoboteq::start_write, this));
     } else {
         cout << "Error on query write: " << ec.message() << endl;
@@ -174,8 +209,7 @@ void RaftRoboteq::handle_write(const boost::system::error_code& ec) {
 void RaftRoboteq::setThrust(int channel, double thrust) {
     int power = -thrust * 10.0;
     char command [100];
-    int n = sprintf(command, "!G %d %d\n", channel, power);
-    cout << "Writing " << command << endl;
+    int n = sprintf(command, "!G %d %d\r", channel, power);
     boost::asio::async_write(sock, boost::asio::buffer(command, n),
             boost::bind(&RaftRoboteq::handle_command_write, this, _1));
 }
@@ -183,21 +217,23 @@ void RaftRoboteq::setThrust(int channel, double thrust) {
 void RaftRoboteq::setArmPower(bool power) {
     string command;
     if (power)
-        command = "!D1 1\n";
+        command = "!D1 1\r";
     else
-        command = "!D0 1\n";
+        command = "!D0 1\r";
 
     boost::asio::async_write(sock, boost::asio::buffer(command, command.size()),
             boost::bind(&RaftRoboteq::handle_eca_power_write, this, _1));
 }
 
 void RaftRoboteq::parseLine(string line) {
-    cout << "parsing " << line << endl;
     switch (line[0]) {
     case 'V':
         int v1, v2, v3;
-        sscanf(line.c_str(), "V=%d:%d:%d", &v1, &v2, &v3);
-        m_Comms.Notify("ROBOTEQ_BATTERY_VOLTAGE", v2/10.0);
+        if (sscanf(line.c_str(), "V=%d:%d:%d", &v1, &v2, &v3) < 3) {
+	    cout << "Voltage parse error" << endl; 
+	} else {
+	    m_Comms.Notify("ROBOTEQ_BATTERY_VOLTAGE", v2/10.0);
+	}
         break;
 
     case 'A':

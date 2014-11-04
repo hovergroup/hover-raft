@@ -9,6 +9,7 @@ ProcessConfig = iRaftRoboteq
     MaxAppTick  = 0    // no limit
    
     address = 192.168.1.51
+    //address = 127.0.0.1
     port = 5001
 }
 
