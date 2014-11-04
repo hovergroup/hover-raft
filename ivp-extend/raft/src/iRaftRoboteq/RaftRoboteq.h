@@ -30,6 +30,7 @@ private:
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::socket sock;
     boost::asio::streambuf input_buffer;
+    boost::asio::deadline_timer deadline_timer;
 
     boost::thread io_thread;
 
@@ -37,6 +38,8 @@ private:
 
     void start_read();
     void handle_read(const boost::system::error_code& ec);
+    void start_write();
+    void handle_write(const boost::system::error_code& ec);
 
 //    boost::thread io_thread;
 //    boost::asio::deadline_timer timeout;

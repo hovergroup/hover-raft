@@ -18,7 +18,8 @@ using namespace boost::asio;
 // Constructor
 
 RaftRoboteq::RaftRoboteq() :
-                sock(io_service) {
+                sock(io_service),
+                deadline_timer(io_service) {
     tcpReadBuffer = vector<char>(1000, 0);
 }
 
@@ -99,6 +100,7 @@ bool RaftRoboteq::OnStartUp() {
     sock.connect(*iterator);
 
     start_read();
+    start_write();
     io_thread = boost::thread(boost::bind(&RaftRoboteq::io_loop, this));
 
     return (true);
@@ -124,6 +126,20 @@ void RaftRoboteq::handle_read(const boost::system::error_code& ec) {
 
         start_read();
     } else {
-        std::cout << "Error on receive: " << ec.message() << "\n";
+        cout << "Error on receive: " << ec.message() << endl;
+    }
+}
+
+void RaftRoboteq::start_write() {
+    boost::asio::async_write(sock, boost::asio::buffer("hello\n", 6),
+            boost::bind(&RaftRoboteq::handle_write, this, _1));
+}
+
+void RaftRoboteq::handle_write(const boost::system::error_code& ec) {
+    if (!ec) {
+        deadline_timer.expires_from_now(boost::posix_time::seconds(1));
+        deadline_timer.async_wait(boost::bind(&RaftRoboteq::start_write, this));
+    } else {
+        cout << "Write on write: " << ec.message() << endl;
     }
 }
