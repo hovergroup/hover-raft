@@ -10,16 +10,10 @@
 
 #include "MOOS/libMOOS/MOOSLib.h"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <errno.h>
-
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
 
 #include <iostream>
-#include <string.h>
 
 class RaftRoboteq: public CMOOSApp {
 public:
@@ -35,6 +29,14 @@ protected:
 private:
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::socket sock;
+    boost::asio::streambuf input_buffer;
+
+    boost::thread io_thread;
+
+    void io_loop();
+
+    void start_read();
+    void handle_read(const boost::system::error_code& ec);
 
 //    boost::thread io_thread;
 //    boost::asio::deadline_timer timeout;

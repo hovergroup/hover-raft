@@ -54,13 +54,13 @@ bool RaftRoboteq::OnConnectToServer() {
 //            happens AppTick times per second
 
 bool RaftRoboteq::Iterate() {
-    boost::system::error_code error;
-    boost::asio::streambuf response;
-    boost::asio::read_until(sock, response, "\n");
-    //int n = sock.read_some(boost::asio::buffer(tcpReadBuffer, 100));
-    //if (n > 0) {
-    std::istream response_stream(&response);
-    cout << response_stream.rdbuf();
+//    boost::system::error_code error;
+//    boost::asio::streambuf response;
+//    boost::asio::read_until(sock, response, "\n");
+//    //int n = sock.read_some(boost::asio::buffer(tcpReadBuffer, 100));
+//    //if (n > 0) {
+//    std::istream response_stream(&response);
+//    cout << response_stream.rdbuf();
         //cout << string(tcpReadBuffer.begin(), tcpReadBuffer.begin() += n) << endl;
     //}
 
@@ -98,34 +98,29 @@ bool RaftRoboteq::OnStartUp() {
 
     sock.connect(*iterator);
 
-//    struct sockaddr_in m_server_address;
-//    struct hostent *m_server;
-//
-//    m_tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-//    if (m_tcp_sockfd < 0) {
-//        std::cout << "Error opening socket" << std::endl;
-//        return false;
-//    }
-//
-//    m_server = gethostbyname(address.c_str());
-//    if (m_server == NULL) {
-//        std::cout << "Error, no such host " << address << std::endl;
-//        return false;
-//    }
-//
-//    bzero((char *) &m_server_address, sizeof(m_server_address));
-//    m_server_address.sin_family = AF_INET;
-//    bcopy((char *) m_server->h_addr,
-//            (char *)&m_server_address.sin_addr.s_addr,
-//            m_server->h_length);
-//    m_server_address.sin_port = htons(port);
-//    if (connect(m_tcp_sockfd, (struct sockaddr *) &m_server_address,
-//            sizeof(m_server_address)) < 0) {
-//        int errsv = errno;
-//        std::cout << "error connecting" << std::endl;
-//        cout << errsv << endl;
-//        return false;
-//    }
+    io_thread = boost::thread(boost::bind(&RaftRoboteq::io_loop, this));
 
     return (true);
+}
+
+void RaftRoboteq::io_loop() {
+    io_service.run();
+}
+
+void RaftRoboteq::start_read() {
+    boost::asio::async_read_until(sock, input_buffer, '\n',
+            boost::bind(&RaftRoboteq::handle_read, this, _1));
+}
+
+void RaftRoboteq::handle_read(const boost::system::error_code& ec) {
+    if (!ec) {
+        // Extract the newline-delimited message from the buffer.
+        std::string line;
+        std::istream is(&input_buffer);
+        cout << is.rdbuf() << endl;
+
+        start_read();
+    } else {
+        std::cout << "Error on receive: " << ec.message() << "\n";
+    }
 }
