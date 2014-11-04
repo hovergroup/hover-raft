@@ -104,7 +104,9 @@ bool RaftRoboteq::OnStartUp() {
 }
 
 void RaftRoboteq::io_loop() {
+    cout << "Running io service" << endl;
     io_service.run();
+    cout << "Finished running io service" << endl;
 }
 
 void RaftRoboteq::start_read() {
