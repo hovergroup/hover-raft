@@ -4,10 +4,11 @@ Community = raft
 
 ProcessConfig = iRaftRoboteq
 {
-   AppTick   = 4
-   CommsTick = 4
+    IterateMode = 1    // comms driven iterate and mail
+    AppTick     = 20   // iterate lower bound
+    MaxAppTick  = 0    // no limit
    
-   address = 192.168.1.51
-   port = 5001
+    address = 192.168.1.51
+    port = 5001
 }
 
