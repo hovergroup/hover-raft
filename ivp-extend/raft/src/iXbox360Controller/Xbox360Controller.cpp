@@ -141,15 +141,26 @@ void Xbox360Controller::io_loop() {
         printf("\r");
 
         if (axes) {
-            printf("Axes: ");
-            for (i = 0; i < axes; i++)
-                printf("%2d:%6d ", i, axis[i]);
+            printf("LStickX:%6d", axis[0]);
+            printf("LStickY:%6d", axis[1]);
+            printf("LTrig:%6d", axis[2]);
+            printf("RStickX:%6d", axis[3]);
+            printf("RStickY:%6d", axis[4]);
+            printf("RTrig:%6d", axis[5]);
+            printf("DPadX:%6d", axis[6]);
+            printf("DPadY:%6d", axis[7]);
         }
 
         if (buttons) {
-            printf("Buttons: ");
-            for (i = 0; i < buttons; i++)
-                printf("%2d:%s ", i, button[i] ? "on " : "off");
+            printf("A:%d ", button[0]);
+            printf("B:%d ", button[1]);
+            printf("X:%d ", button[2]);
+            printf("Y:%d ", button[3]);
+            printf("LB:%d ", button[4]);
+            printf("RB:%d ", button[5]);
+            printf("Sel:%d ", button[6]);
+            printf("Start:%d ", button[7]);
+            printf("XBox:%d ", button[8]);
         }
 
         fflush(stdout);
