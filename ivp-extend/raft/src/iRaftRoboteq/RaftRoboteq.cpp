@@ -29,8 +29,8 @@ RaftRoboteq::RaftRoboteq() :
 
     power_report_count = 0;
     power_command_count = 0;
-    power_ack_count = 0;
-    power_nack_count = 0;
+    ack_count = 0;
+    nack_count = 0;
     last_report_time = -1;
 }
 
@@ -102,7 +102,7 @@ bool RaftRoboteq::OnStartUp() {
     sock.connect(*iterator);
 
     boost::asio::async_write(sock, boost::asio::buffer("^ECHOF 1\r", 9),
-            boost::bind(&RaftRoboteq::handle_eca_power_write, this, _1));
+            boost::bind(&RaftRoboteq::handle_basic_write, this, _1));
     start_write();
     start_read();
     io_thread = boost::thread(boost::bind(&RaftRoboteq::io_loop, this));
@@ -117,10 +117,10 @@ void RaftRoboteq::io_loop() {
 }
 
 
-void RaftRoboteq::handle_eca_power_write(const boost::system::error_code& ec) {
+void RaftRoboteq::handle_basic_write(const boost::system::error_code& ec) {
     if (!ec) {
     } else {
-        cout << "Error on eca power write: " << ec.message() << endl;
+        cout << "Error on basic write: " << ec.message() << endl;
     }
 }
 
@@ -217,66 +217,81 @@ void RaftRoboteq::setThrust(int channel, double thrust) {
 void RaftRoboteq::setArmPower(bool power) {
     string command;
     if (power)
-        command = "!D1 1\r";
+        command = "!D1 2\r";
     else
-        command = "!D0 1\r";
+        command = "!D0 2\r";
 
     boost::asio::async_write(sock, boost::asio::buffer(command, command.size()),
-            boost::bind(&RaftRoboteq::handle_eca_power_write, this, _1));
+            boost::bind(&RaftRoboteq::handle_basic_write, this, _1));
 }
 
 void RaftRoboteq::parseLine(string line) {
     switch (line[0]) {
     case 'V':
         int v1, v2, v3;
-        if (sscanf(line.c_str(), "V=%d:%d:%d", &v1, &v2, &v3) < 3) {
-	    cout << "Voltage parse error" << endl; 
-	} else {
-	    m_Comms.Notify("ROBOTEQ_BATTERY_VOLTAGE", v2/10.0);
-	}
+        if (sscanf(line.c_str(), "V=%d:%d:%d", &v1, &v2, &v3) == 3) {
+            m_Comms.Notify("ROBOTEQ_BATTERY_VOLTAGE", v2/10.0);
+        } else {
+            cout << "Voltage parse error" << endl;
+        }
         break;
 
     case 'A':
         int a1, a2;
-        sscanf(line.c_str(), "A=%d:%d", &a1, &a2);
-        m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_RIGHT", a1/10.0);
-        m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_LEFT", a2/10.0);
+        if (sscanf(line.c_str(), "A=%d:%d", &a1, &a2) == 2) {
+            m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_RIGHT", a1/10.0);
+            m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_LEFT", a2/10.0);
+        } else {
+            cout << "Motor current parse error" << endl;
+        }
         break;
 
     case 'B':
         int b1, b2;
-        sscanf(line.c_str(), "BA=%d:%d", &b1, &b2);
-        m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_RIGHT", b1/10.0);
-        m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_LEFT", b2/10.0);
+        if (sscanf(line.c_str(), "BA=%d:%d", &b1, &b2) == 2) {
+            m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_RIGHT", b1/10.0);
+            m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_LEFT", b2/10.0);
+        } else {
+            cout << "Battery current parse error" << endl;
+        }
         break;
 
     case 'T':
         int t1, t2;
-        sscanf(line.c_str(), "T=%d:%d", &t1, &t2);
-        m_Comms.Notify("ROBOTEQ_TEMPERATURE_RIGHT", t1/10.0);
-        m_Comms.Notify("ROBOTEQ_TEMPERATURE_LEFT", t2/10.0);
+        if (sscanf(line.c_str(), "T=%d:%d", &t1, &t2) == 2) {
+            m_Comms.Notify("ROBOTEQ_TEMPERATURE_RIGHT", t1/10.0);
+            m_Comms.Notify("ROBOTEQ_TEMPERATURE_LEFT", t2/10.0);
+        } else {
+            cout << "Temperature parse error" << endl;
+        }
         break;
 
     case 'D':
         int d1;
-        sscanf(line.c_str(), "DI=%d", &d1);
-        m_Comms.Notify("ROBOTEQ_ESTOP", (double) d1);
+        if (sscanf(line.c_str(), "DI=%d", &d1) == 1) {
+            m_Comms.Notify("ROBOTEQ_ESTOP", (double) d1);
+        } else {
+            cout << "Estop parse error" << endl;
+        }
         break;
 
     case 'P':
         int p1, p2;
-        sscanf(line.c_str(), "P=%d:%d", &p1, &p2);
-        m_Comms.Notify("ROBOTEQ_POWER_LEFT", p1);
-        m_Comms.Notify("ROBOTEQ_POWER_RIGHT", p2);
-        power_report_count++;
+        if (sscanf(line.c_str(), "P=%d:%d", &p1, &p2) == 2) {
+            m_Comms.Notify("ROBOTEQ_POWER_LEFT", p1);
+            m_Comms.Notify("ROBOTEQ_POWER_RIGHT", p2);
+            power_report_count++;
+        } else {
+            cout << "Power parse error" << endl;
+        }
         break;
 
     case '+':
-        power_ack_count++;
+        ack_count++;
         break;
 
     case '-':
-        power_nack_count++;
+        nack_count++;
         break;
     }
 
@@ -285,22 +300,16 @@ void RaftRoboteq::parseLine(string line) {
         double time_elapsed = MOOSTime() - last_report_time;
         double power_report_rate = power_report_count / time_elapsed;
         double power_command_rate = power_command_count / time_elapsed;
-
-        double power_nack_percent;
-        if (power_command_count == 0) {
-            power_nack_percent = 0;
-        } else {
-            power_nack_percent = 100.0 * power_nack_count / power_command_count;
-        }
+        double nack_rate = nack_count / time_elapsed;
 
         m_Comms.Notify("ROBOTEQ_REPORT_RATE", power_report_rate);
         m_Comms.Notify("ROBOTEQ_COMMAND_RATE", power_command_rate);
-        m_Comms.Notify("ROBOTEQ_NACK_PERCENT", power_nack_percent);
+        m_Comms.Notify("ROBOTEQ_NACK_RATE", nack_rate);
 
         power_report_count = 0;
         power_command_count = 0;
-        power_ack_count = 0;
-        power_nack_count = 0;
+        ack_count = 0;
+        nack_count = 0;
         last_report_time = MOOSTime();
     }
 }

@@ -17,6 +17,7 @@ INCLUDE_DIRECTORIES(${LOCAL_LIBRARY_DIRS})
 #============================================================================
 
 ADD_SUBDIRECTORY(iRaftRoboteq)
+ADD_SUBDIRECTORY(iXbox360Controller)
 
 IF(BUILD_SHORE_APPS)
     ADD_SUBDIRECTORY(testing_app)

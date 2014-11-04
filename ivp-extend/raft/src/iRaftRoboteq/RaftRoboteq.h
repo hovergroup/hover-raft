@@ -40,7 +40,7 @@ private:
     void start_write();
     void handle_write(const boost::system::error_code& ec);
     void handle_command_write(const boost::system::error_code& ec);
-    void handle_eca_power_write(const boost::system::error_code& ec);
+    void handle_basic_write(const boost::system::error_code& ec);
     
     std::istream& safeGetline(std::istream& is, std::string& t);
 
@@ -50,7 +50,7 @@ private:
 
     std::vector<std::string> slow_queries;
     int slow_query_index;
-    int power_report_count, power_command_count, power_ack_count, power_nack_count;
+    int power_report_count, power_command_count, ack_count, nack_count;
     double last_report_time;
 };
 

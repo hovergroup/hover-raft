@@ -1,0 +1,9 @@
+//------------------------------------------------
+// iXbox360Controller config block
+
+ProcessConfig = iXbox360Controller
+{
+   AppTick   = 4
+   CommsTick = 4
+}
+
