@@ -60,12 +60,23 @@ bool Xbox360Controller::OnNewMail(MOOSMSG_LIST &NewMail) {
 // Procedure: OnConnectToServer
 
 bool Xbox360Controller::OnConnectToServer() {
-    // register for variables here
-    // possibly look at the mission file?
-    // m_MissionReader.GetConfigurationParam("Name", <string>);
-    // m_Comms.Register("VARNAME", 0);
-
-    RegisterVariables();
+    m_Comms.Notify("XBOX_LSTICKX", 0.0);
+    m_Comms.Notify("XBOX_LSTICKY", 0.0);
+    m_Comms.Notify("XBOX_RSTICKX", 0.0);
+    m_Comms.Notify("XBOX_RSTICKY", 0.0);
+    m_Comms.Notify("XBOX_LTRIG", 0.0);
+    m_Comms.Notify("XBOX_RTRIG", 0.0);
+    m_Comms.Notify("XBOX_DPADX", 0.0);
+    m_Comms.Notify("XBOX_DPADY", 0.0);
+    m_Comms.Notify("XBOX_A", 0.0);
+    m_Comms.Notify("XBOX_B", 0.0);
+    m_Comms.Notify("XBOX_X", 0.0);
+    m_Comms.Notify("XBOX_Y", 0.0);
+    m_Comms.Notify("XBOX_RB", 0.0);
+    m_Comms.Notify("XBOX_LB", 0.0);
+    m_Comms.Notify("XBOX_SELECT", 0.0);
+    m_Comms.Notify("XBOX_START", 0.0);
+    m_Comms.Notify("XBOX_XBOX", 0.0);
     return (true);
 }
 
@@ -138,32 +149,49 @@ void Xbox360Controller::io_loop() {
             break;
         }
 
-        printf("\r");
+//        printf("\r");
 
         if (axes) {
-            printf("LStickX:%6d", axis[0]);
-            printf("LStickY:%6d", axis[1]);
-            printf("LTrig:%6d", axis[2]);
-            printf("RStickX:%6d", axis[3]);
-            printf("RStickY:%6d", axis[4]);
-            printf("RTrig:%6d", axis[5]);
-            printf("DPadX:%6d", axis[6]);
-            printf("DPadY:%6d", axis[7]);
+            m_Comms.Notify("XBOX_LSTICKX", (double) axis[0]);
+            m_Comms.Notify("XBOX_LSTICKY", (double) axis[1]);
+            m_Comms.Notify("XBOX_RSTICKX", (double) axis[3]);
+            m_Comms.Notify("XBOX_RSTICKY", (double) axis[4]);
+            m_Comms.Notify("XBOX_LTRIG", (double) axis[2]);
+            m_Comms.Notify("XBOX_RTRIG", (double) axis[5]);
+            m_Comms.Notify("XBOX_DPADX", (double) axis[6]);
+            m_Comms.Notify("XBOX_DPADY", (double) axis[7]);
+//            printf("LStickX:%6d", axis[0]);
+//            printf("LStickY:%6d", axis[1]);
+//            printf("LTrig:%6d", axis[2]);
+//            printf("RStickX:%6d", axis[3]);
+//            printf("RStickY:%6d", axis[4]);
+//            printf("RTrig:%6d", axis[5]);
+//            printf("DPadX:%6d", axis[6]);
+//            printf("DPadY:%6d", axis[7]);
         }
 
         if (buttons) {
-            printf("A:%d ", button[0]);
-            printf("B:%d ", button[1]);
-            printf("X:%d ", button[2]);
-            printf("Y:%d ", button[3]);
-            printf("LB:%d ", button[4]);
-            printf("RB:%d ", button[5]);
-            printf("Sel:%d ", button[6]);
-            printf("Start:%d ", button[7]);
-            printf("XBox:%d ", button[8]);
+            m_Comms.Notify("XBOX_A", (double) button[0]);
+            m_Comms.Notify("XBOX_B", (double) button[1]);
+            m_Comms.Notify("XBOX_X", (double) button[2]);
+            m_Comms.Notify("XBOX_Y", (double) button[3]);
+            m_Comms.Notify("XBOX_RB", (double) button[5]);
+            m_Comms.Notify("XBOX_LB", (double) button[4]);
+            m_Comms.Notify("XBOX_SELECT", (double) button[6]);
+            m_Comms.Notify("XBOX_START", (double) button[7]);
+            m_Comms.Notify("XBOX_XBOX", (double) button[8]);
+//            printf("A:%d ", button[0]);
+//            printf("B:%d ", button[1]);
+//            printf("X:%d ", button[2]);
+//            printf("Y:%d ", button[3]);
+//            printf("LB:%d ", button[4]);
+//            printf("RB:%d ", button[5]);
+//            printf("Sel:%d ", button[6]);
+//            printf("Start:%d ", button[7]);
+//            printf("XBox:%d ", button[8]);
         }
 
-        fflush(stdout);
+//        fflush(stdout);
     }
 }
 

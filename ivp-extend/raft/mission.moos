@@ -1,0 +1,32 @@
+ServerHost = localhost
+ServerPort = 9000
+Community = raft
+
+ProcessConfig = iRaftRoboteq
+{
+    IterateMode = 1    // comms driven iterate and mail
+    AppTick     = 20   // iterate lower bound
+    MaxAppTick  = 0    // no limit
+   
+    address = 192.168.1.51
+    //address = 127.0.0.1
+    port = 5001
+}
+
+ProcessConfig = iXbox360Controller
+{
+    IterateMode = 0
+    AppTick     = 1
+}
+
+ProcessConfig = pRaftControl
+{
+    IterateMode = 1
+    AppTick     = 20
+    MaxAppTick  = 0
+    
+    lstickx_dead = -4500,1500
+    lsticky_dead = -4500,500
+    rstickx_dead = -4000,400
+    rsticky_dead = -1800,2000
+}
