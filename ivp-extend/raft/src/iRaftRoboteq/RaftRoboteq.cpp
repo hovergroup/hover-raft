@@ -32,6 +32,9 @@ RaftRoboteq::RaftRoboteq() :
     ack_count = 0;
     nack_count = 0;
     last_report_time = -1;
+    
+    last_command_time_left = -1;
+    last_command_time_right = -1;
 }
 
 //---------------------------------------------------------
@@ -50,14 +53,20 @@ bool RaftRoboteq::OnNewMail(MOOSMSG_LIST &NewMail) {
         CMOOSMsg &msg = *p;
         string key = msg.GetKey();
         if (key == "DESIRED_THRUST_LEFT") {
-            setThrust(2, msg.GetDouble());
+	    if (MOOSTime() - last_command_time_left > .005) {
+	        setThrust(2, msg.GetDouble());
+	        last_command_time_left = MOOSTime();
+	    }
         } else if (key == "DESIRED_THRUST_RIGHT") {
-            setThrust(1, msg.GetDouble());
-        } else if (key == "ECA_ARM_POWER", 0) {
-            if (msg.GetDouble() == 0) {
-                setArmPower(false);
-            } else {
+	    if (MOOSTime() - last_command_time_right > .005) {
+                setThrust(1, msg.GetDouble());
+	        last_command_time_right = MOOSTime();
+	    }
+        } else if (key == "ECA_ARM_POWER") {
+            if (msg.GetDouble() == 1) {
                 setArmPower(true);
+            } else {
+                setArmPower(false);
             }
         }
     }
@@ -199,7 +208,7 @@ void RaftRoboteq::start_write() {
 
 void RaftRoboteq::handle_write(const boost::system::error_code& ec) {
     if (!ec) {
-        deadline_timer.expires_from_now(boost::posix_time::milliseconds(10));
+        deadline_timer.expires_from_now(boost::posix_time::milliseconds(20));
         deadline_timer.async_wait(boost::bind(&RaftRoboteq::start_write, this));
     } else {
         cout << "Error on query write: " << ec.message() << endl;
@@ -301,10 +310,12 @@ void RaftRoboteq::parseLine(string line) {
         double power_report_rate = power_report_count / time_elapsed;
         double power_command_rate = power_command_count / time_elapsed;
         double nack_rate = nack_count / time_elapsed;
+	double ack_rate = ack_count / time_elapsed;
 
         m_Comms.Notify("ROBOTEQ_REPORT_RATE", power_report_rate);
         m_Comms.Notify("ROBOTEQ_COMMAND_RATE", power_command_rate);
         m_Comms.Notify("ROBOTEQ_NACK_RATE", nack_rate);
+	m_Comms.Notify("ROBOTEQ_ACK_RATE", ack_rate);
 
         power_report_count = 0;
         power_command_count = 0;

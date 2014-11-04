@@ -51,7 +51,7 @@ private:
     std::vector<std::string> slow_queries;
     int slow_query_index;
     int power_report_count, power_command_count, ack_count, nack_count;
-    double last_report_time;
+    double last_report_time, last_command_time_right, last_command_time_left;
 };
 
 #endif 

@@ -34,9 +34,9 @@ bool RaftControl::OnNewMail(MOOSMSG_LIST &NewMail) {
         CMOOSMsg &msg = *p;
         string key = msg.GetKey();
         if (key == "XBOX_LSTICKY") {
-            left_thrust = mapThrust(msg.GetDouble(), left_y_neg_dead, left_y_pos_dead);
-        } else if (key == "XBOX_LSTICKY") {
-            right_thrust = mapThrust(msg.GetDouble(), right_y_neg_dead, right_y_pos_dead);
+            left_thrust = -mapThrust(msg.GetDouble(), left_y_neg_dead, left_y_pos_dead);
+        } else if (key == "XBOX_RSTICKY") {
+            right_thrust = -mapThrust(msg.GetDouble(), right_y_neg_dead, right_y_pos_dead);
         } else if (key == "XBOX_START") {
             if (msg.GetDouble() == 1) {
                 enable = !enable;
@@ -68,8 +68,8 @@ bool RaftControl::OnConnectToServer() {
 }
 
 bool RaftControl::parseDeadBand(string config, double & neg, double & pos) {
-    double a, b;
-    if (sscanf(config.c_str(), "%f,%f", a, b) == 2) {
+    float a, b;
+    if (sscanf(config.c_str(), "%f,%f", &a, &b) == 2) {
         neg = std::min(a,b);
         pos = std::max(a,b);
         return true;
