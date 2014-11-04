@@ -31,7 +31,6 @@ private:
     boost::asio::ip::tcp::socket sock;
     boost::asio::streambuf input_buffer;
     boost::asio::deadline_timer deadline_timer;
-
     boost::thread io_thread;
 
     void io_loop();
@@ -40,14 +39,17 @@ private:
     void handle_read(const boost::system::error_code& ec);
     void start_write();
     void handle_write(const boost::system::error_code& ec);
+    void handle_command_write(const boost::system::error_code& ec);
+    void handle_eca_power_write(const boost::system::error_code& ec);
 
-//    boost::thread io_thread;
-//    boost::asio::deadline_timer timeout;
+    void parseLine(std::string line);
+    void setThrust(int channel, double thrust);
+    void setArmPower(bool power);
 
-
-    int m_tcp_sockfd;
-    std::vector<char> tcpReadBuffer;
-    std::string string_buffer;
+    std::vector<std::string> slow_queries;
+    int slow_query_index;
+    int power_report_count, power_command_count, power_ack_count, power_nack_count;
+    double last_report_time;
 };
 
 #endif 
