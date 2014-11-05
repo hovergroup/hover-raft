@@ -27,8 +27,8 @@ protected:
     bool OnStartUp();
 
 private:
-    boost::asio::serial_port sock;
     boost::asio::io_service io_service;
+    boost::asio::serial_port sock;
 //    boost::asio::ip::tcp::socket sock;
     boost::asio::streambuf input_buffer;
     boost::asio::deadline_timer deadline_timer;

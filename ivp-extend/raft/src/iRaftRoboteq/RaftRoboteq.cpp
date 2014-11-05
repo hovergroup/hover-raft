@@ -11,7 +11,7 @@
 
 using namespace std;
 
-using boost::asio::ip::tcp;
+//using boost::asio::ip::tcp;
 using namespace boost::asio;
 
 //---------------------------------------------------------
@@ -97,6 +97,7 @@ bool RaftRoboteq::Iterate() {
         setThrust(1, command_right);
         new_command_right = false;
     }
+    
     return (true);
 }
 
@@ -109,7 +110,7 @@ bool RaftRoboteq::OnStartUp() {
 //    string port = "5001";
     string port = "/dev/ttyUSB0";
 //    m_MissionReader.GetConfigurationParam("address", address);
-    m_MissionReader.GetConfigurationParam("port", port);
+    //m_MissionReader.GetConfigurationParam("port", port);
 
 //    tcp::resolver resolver(io_service);
 //    tcp::resolver::query query(tcp::v4(), address, port);
@@ -117,6 +118,7 @@ bool RaftRoboteq::OnStartUp() {
 //
 //    sock.connect(*iterator);
 //
+    cout << "Opening " << port << endl;
     sock.open(port);
     sock.set_option(serial_port_base::baud_rate(115200));
     sock.set_option(
@@ -130,6 +132,7 @@ bool RaftRoboteq::OnStartUp() {
 
     boost::asio::async_write(sock, boost::asio::buffer("^ECHOF 1\r", 9),
             boost::bind(&RaftRoboteq::handle_basic_write, this, _1));
+    
     start_write();
     start_read();
     io_thread = boost::thread(boost::bind(&RaftRoboteq::io_loop, this));
