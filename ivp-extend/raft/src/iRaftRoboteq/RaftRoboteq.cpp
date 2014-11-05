@@ -33,8 +33,10 @@ RaftRoboteq::RaftRoboteq() :
     nack_count = 0;
     last_report_time = -1;
     
-    last_command_time_left = -1;
-    last_command_time_right = -1;
+    command_left = 0;
+    command_right = 0;
+    new_command_left = false;
+    new_command_right = false;
 }
 
 //---------------------------------------------------------
@@ -53,15 +55,11 @@ bool RaftRoboteq::OnNewMail(MOOSMSG_LIST &NewMail) {
         CMOOSMsg &msg = *p;
         string key = msg.GetKey();
         if (key == "DESIRED_THRUST_LEFT") {
-	    if (MOOSTime() - last_command_time_left > .005) {
-	        setThrust(2, msg.GetDouble());
-	        last_command_time_left = MOOSTime();
-	    }
+            command_left = msg.GetDouble();
+            new_command_left = true;
         } else if (key == "DESIRED_THRUST_RIGHT") {
-	    if (MOOSTime() - last_command_time_right > .005) {
-                setThrust(1, msg.GetDouble());
-	        last_command_time_right = MOOSTime();
-	    }
+            command_right = msg.GetDouble();
+            new_command_right = true;
         } else if (key == "ECA_ARM_POWER") {
             if (msg.GetDouble() == 1) {
                 setArmPower(true);
@@ -90,7 +88,15 @@ bool RaftRoboteq::OnConnectToServer() {
 //            happens AppTick times per second
 
 bool RaftRoboteq::Iterate() {
+    if (new_command_left) {
+        setThrust(2, command_left);
+        new_command_left = false;
+    }
 
+    if (new_command_right) {
+        setThrust(1, command_right);
+        new_command_right = false;
+    }
     return (true);
 }
 
@@ -99,16 +105,28 @@ bool RaftRoboteq::Iterate() {
 //            happens before connection is open
 
 bool RaftRoboteq::OnStartUp() {
-    string address = "192.168.1.51";
-    string port = "5001";
-    m_MissionReader.GetConfigurationParam("address", address);
+//    string address = "192.168.1.51";
+//    string port = "5001";
+    string port = "/dev/ttyUSB0";
+//    m_MissionReader.GetConfigurationParam("address", address);
     m_MissionReader.GetConfigurationParam("port", port);
 
-    tcp::resolver resolver(io_service);
-    tcp::resolver::query query(tcp::v4(), address, port);
-    tcp::resolver::iterator iterator = resolver.resolve(query);
+//    tcp::resolver resolver(io_service);
+//    tcp::resolver::query query(tcp::v4(), address, port);
+//    tcp::resolver::iterator iterator = resolver.resolve(query);
+//
+//    sock.connect(*iterator);
+//
+    sock.open(port);
+    sock.set_option(serial_port_base::baud_rate(115200));
+    sock.set_option(
+            serial_port_base::flow_control(
+                    serial_port_base::flow_control::none));
+    sock.set_option(serial_port_base::parity(serial_port_base::parity::none));
+    sock.set_option(
+            serial_port_base::stop_bits(serial_port_base::stop_bits::one));
+    sock.set_option(serial_port_base::character_size(8));
 
-    sock.connect(*iterator);
 
     boost::asio::async_write(sock, boost::asio::buffer("^ECHOF 1\r", 9),
             boost::bind(&RaftRoboteq::handle_basic_write, this, _1));

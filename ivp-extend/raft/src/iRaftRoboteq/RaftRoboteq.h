@@ -27,8 +27,9 @@ protected:
     bool OnStartUp();
 
 private:
+    boost::asio::serial_port sock;
     boost::asio::io_service io_service;
-    boost::asio::ip::tcp::socket sock;
+//    boost::asio::ip::tcp::socket sock;
     boost::asio::streambuf input_buffer;
     boost::asio::deadline_timer deadline_timer;
     boost::thread io_thread;
@@ -51,7 +52,10 @@ private:
     std::vector<std::string> slow_queries;
     int slow_query_index;
     int power_report_count, power_command_count, ack_count, nack_count;
-    double last_report_time, last_command_time_right, last_command_time_left;
+    double last_report_time;
+
+    double command_left, command_right;
+    bool new_command_left, new_command_right;
 };
 
 #endif 

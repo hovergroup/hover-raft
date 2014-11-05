@@ -4,13 +4,12 @@ Community = raft
 
 ProcessConfig = iRaftRoboteq
 {
-    IterateMode = 1    // comms driven iterate and mail
-    AppTick     = 20   // iterate lower bound
-    MaxAppTick  = 0    // no limit
+    IterateMode = 0    // regular iterate and mail
+    AppTick     = 50   // iterate speed
    
-    address = 192.168.1.51
+    //address = 192.168.1.51
     //address = 127.0.0.1
-    port = 5001
+    port = /dev/ttyUSB0
 }
 
 ProcessConfig = iXbox360Controller
