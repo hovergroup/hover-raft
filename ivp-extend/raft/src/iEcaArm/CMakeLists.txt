@@ -1,23 +1,25 @@
 #--------------------------------------------------------
-# The CMakeLists.txt for:                       pRaftControl
+# The CMakeLists.txt for:                       iEcaArm
 # Author(s):                              
 #--------------------------------------------------------
 
 # FILE(GLOB SRC *.cpp)
 
 SET(SRC
-  RaftControl.cpp
-  RaftControl_Info.cpp
+  EcaArm.cpp
+  EcaArm_Info.cpp
   main.cpp
 )
 
 
 
-ADD_EXECUTABLE(pRaftControl ${SRC})
+ADD_EXECUTABLE(iEcaArm ${SRC})
 
-TARGET_LINK_LIBRARIES(pRaftControl
-   ${MOOS_LIBRARIES}
-   mbutil
-   m
-   pthread)
+TARGET_LINK_LIBRARIES(iEcaArm
+    boost_system
+    boost_thread
+    ${MOOS_LIBRARIES}
+    mbutil
+    m
+    pthread)
 

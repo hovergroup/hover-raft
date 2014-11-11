@@ -16,6 +16,7 @@ INCLUDE_DIRECTORIES(${LOCAL_LIBRARY_DIRS})
 # List the subdirectories to build...
 #============================================================================
 
+ADD_SUBDIRECTORY(iEcaArm)
 ADD_SUBDIRECTORY(iRaftRoboteq)
 ADD_SUBDIRECTORY(iXbox360Controller)
 ADD_SUBDIRECTORY(pRaftControl)

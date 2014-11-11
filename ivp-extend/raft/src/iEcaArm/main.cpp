@@ -8,15 +8,15 @@
 #include <string>
 #include "MBUtils.h"
 #include "ColorParse.h"
-#include "RaftControl.h"
-#include "RaftControl_Info.h"
+#include "EcaArm.h"
+#include "EcaArm_Info.h"
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
   string mission_file;
-  string run_command = argv[0];
+  string run_command = "iEcaArm";
 
   for(int i=1; i<argc; i++) {
     string argi = argv[i];
@@ -40,12 +40,12 @@ int main(int argc, char *argv[])
     showHelpAndExit();
 
   cout << termColor("green");
-  cout << "pRaftControl launching as " << run_command << endl;
+  cout << "iEcaArm launching as " << run_command << endl;
   cout << termColor() << endl;
 
-  RaftControl RaftControl;
+  EcaArm eca;
 
-  RaftControl.Run(run_command.c_str(), mission_file.c_str());
+  eca.Run(run_command.c_str(), mission_file.c_str());
   
   return(0);
 }

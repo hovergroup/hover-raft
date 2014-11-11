@@ -1,44 +1,61 @@
 /************************************************************/
 /*    NAME:                                               */
 /*    ORGN: MIT                                             */
-/*    FILE: RaftControl.h                                          */
+/*    FILE: EcaArm.h                                          */
 /*    DATE:                                                 */
 /************************************************************/
 
-#ifndef RaftControl_HEADER
-#define RaftControl_HEADER
+#ifndef EcaArm_HEADER
+#define EcaArm_HEADER
 
 #include "MOOS/libMOOS/MOOSLib.h"
 
-class RaftControl: public CMOOSApp {
+#include <boost/asio.hpp>
+#include <boost/thread.hpp>
+
+#include <iostream>
+
+class EcaArm: public CMOOSApp {
 public:
-    RaftControl();
-    ~RaftControl();
+    EcaArm();
+    ~EcaArm();
 
 protected:
     bool OnNewMail(MOOSMSG_LIST &NewMail);
     bool Iterate();
     bool OnConnectToServer();
     bool OnStartUp();
-    void RegisterVariables();
 
 private:
-    double right_thrust, left_thrust;
-    bool enable;
-    // Configuration variables
+    boost::asio::io_service io_service;
+    boost::asio::serial_port sock;
+//    boost::asio::ip::tcp::socket sock;
+    boost::asio::streambuf input_buffer;
+    boost::asio::deadline_timer deadline_timer;
+    boost::thread io_thread;
 
-private:
-    double left_x_neg_dead, left_x_pos_dead;
-    double left_y_neg_dead, left_y_pos_dead;
-    double right_x_neg_dead, right_x_pos_dead;
-    double right_y_neg_dead, right_y_pos_dead;
+    void io_loop();
 
-    bool parseDeadBand(std::string config, double & neg, double & pos);
-    double mapThrust(double input, double neg, double pos);
+    void start_read();
+    void handle_read(const boost::system::error_code& ec, std::size_t bt);
+    void start_write();
+    void handle_write(const boost::system::error_code& ec);
+    void handle_command_write(const boost::system::error_code& ec);
+    void handle_basic_write(const boost::system::error_code& ec);
+    
+    std::istream& safeGetline(std::istream& is, std::string& t);
 
-    // State variables
-    unsigned int m_iterations;
-    double m_timewarp;
+    void parseLine(std::string line);
+    void setThrust(int channel, double thrust);
+    void setArmPower(bool power);
+
+    std::vector<std::string> slow_queries;
+    int slow_query_index;
+    int power_report_count, power_command_count, ack_count, nack_count;
+    double last_report_time;
+
+    double command_left, command_right;
+    bool new_command_left, new_command_right;
 };
 
 #endif 
