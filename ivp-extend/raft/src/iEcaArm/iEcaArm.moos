@@ -1,0 +1,9 @@
+//------------------------------------------------
+// pRaftControl config block
+
+ProcessConfig = pRaftControl
+{
+   AppTick   = 4
+   CommsTick = 4
+}
+
