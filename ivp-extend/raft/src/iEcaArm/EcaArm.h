@@ -15,6 +15,55 @@
 
 #include <iostream>
 
+enum DemandType {
+    stop = 0,
+    voltage_cw,
+    voltage_ccw,
+    speed_cw,
+    speed_ccw,
+    position
+};
+
+struct DemandMessage {
+    unsigned char start_byte;
+    unsigned char demand_type;
+    unsigned short demand;
+    unsigned short speed_limit;
+    unsigned short current_limit;
+    unsigned char stop_byte;
+};
+
+struct DemandPackage {
+    unsigned char start_byte;
+    unsigned char master_data[3];
+
+    DemandMessage motor_demands[5];
+
+    unsigned char checksum;
+    unsigned char stop_byte;
+};
+
+struct SensorMessage {
+    unsigned char start_byte;
+    unsigned short position;
+    unsigned short speed;
+    unsigned short current;
+    unsigned char temperature;
+    unsigned char stop_byte;
+};
+
+struct SensorPackage {
+    unsigned char start_byte;
+    unsigned char master_temperature;
+    unsigned char master_voltage;
+    unsigned char master_current;
+
+    SensorMessage motor_data[5];
+
+    unsigned char checksum;
+    unsigned char stop_byte;
+};
+
 class EcaArm: public CMOOSApp {
 public:
     EcaArm();
@@ -56,6 +105,10 @@ private:
 
     double command_left, command_right;
     bool new_command_left, new_command_right;
+
+
+    DemandType demand_types[5];
+    double voltage_demands[5], speed_demands[5], last_update_time[5];
 };
 
 #endif 

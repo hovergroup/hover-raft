@@ -53,18 +53,21 @@ bool RaftRoboteq::OnNewMail(MOOSMSG_LIST &NewMail) {
 
     for (p = NewMail.begin(); p != NewMail.end(); p++) {
         CMOOSMsg &msg = *p;
-        string key = msg.GetKey();
-        if (key == "DESIRED_THRUST_LEFT") {
-            command_left = msg.GetDouble();
-            new_command_left = true;
-        } else if (key == "DESIRED_THRUST_RIGHT") {
-            command_right = msg.GetDouble();
-            new_command_right = true;
-        } else if (key == "ECA_ARM_POWER") {
-            if (msg.GetDouble() == 1) {
-                setArmPower(true);
-            } else {
-                setArmPower(false);
+        // only process new messages
+        if (MOOSTime() - msg.GetTime() < 5) {
+            string key = msg.GetKey();
+            if (key == "DESIRED_THRUST_LEFT") {
+                command_left = msg.GetDouble();
+                new_command_left = true;
+            } else if (key == "DESIRED_THRUST_RIGHT") {
+                command_right = msg.GetDouble();
+                new_command_right = true;
+            } else if (key == "ECA_ARM_POWER") {
+                if (msg.GetDouble() == 1) {
+                    setArmPower(true);
+                } else {
+                    setArmPower(false);
+                }
             }
         }
     }
