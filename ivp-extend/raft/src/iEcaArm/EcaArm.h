@@ -16,12 +16,12 @@
 #include <iostream>
 
 enum DemandType {
-    stop = 0,
-    voltage_cw,
-    voltage_ccw,
-    speed_cw,
-    speed_ccw,
-    position
+    demand_stop = 0,
+    demand_voltage_cw,
+    demand_voltage_ccw,
+    demand_speed_cw,
+    demand_speed_ccw,
+    demand_position
 };
 
 struct DemandMessage {
@@ -79,36 +79,32 @@ private:
     boost::asio::io_service io_service;
     boost::asio::serial_port sock;
 //    boost::asio::ip::tcp::socket sock;
-    boost::asio::streambuf input_buffer;
     boost::asio::deadline_timer deadline_timer;
-    boost::thread io_thread;
 
-    void io_loop();
+    unsigned char input_buffer[51];
 
-    void start_read();
-    void handle_read(const boost::system::error_code& ec, std::size_t bt);
-    void start_write();
-    void handle_write(const boost::system::error_code& ec);
-    void handle_command_write(const boost::system::error_code& ec);
-    void handle_basic_write(const boost::system::error_code& ec);
-    
-    std::istream& safeGetline(std::istream& is, std::string& t);
+    void handle_read(bool data_available, boost::asio::deadline_timer& timeout,
+            const boost::system::error_code& error, std::size_t bytes_transferred);
+    void handle_wait(boost::asio::serial_port& ser_port, const boost::system::error_code& error);
 
-    void parseLine(std::string line);
-    void setThrust(int channel, double thrust);
-    void setArmPower(bool power);
+    static const int yaw_index = 0;
+    static const int shoulder_index = 1;
+    static const int elbow_index = 2;
+    static const int wrist_index = 3;
+    static const int grip_index = 4;
 
-    std::vector<std::string> slow_queries;
-    int slow_query_index;
-    int power_report_count, power_command_count, ack_count, nack_count;
-    double last_report_time;
-
-    double command_left, command_right;
-    bool new_command_left, new_command_right;
-
+    static const int max_voltage = 65536;
+    static const int max_speed = 4095;
 
     DemandType demand_types[5];
-    double voltage_demands[5], speed_demands[5], last_update_time[5];
+    unsigned short demands[5];
+    double last_update_time[5];
+
+    int mapVoltage(double voltage);
+    int mapRPM(double voltage);
+    void handleDemand(double command, bool is_voltage, int index);
+
+    unsigned char doChecksum(unsigned char* c, int length);
 };
 
 #endif 

@@ -20,23 +20,6 @@ using namespace boost::asio;
 EcaArm::EcaArm() :
                 sock(io_service),
                 deadline_timer(io_service) {
-    slow_queries.push_back("?V\r");
-    slow_queries.push_back("?T\r");
-    slow_queries.push_back("?A\r");
-    slow_queries.push_back("?BA\r");
-    slow_queries.push_back("?DI 1\r");
-    slow_query_index = 0;
-
-    power_report_count = 0;
-    power_command_count = 0;
-    ack_count = 0;
-    nack_count = 0;
-    last_report_time = -1;
-    
-    command_left = 0;
-    command_right = 0;
-    new_command_left = false;
-    new_command_right = false;
 }
 
 //---------------------------------------------------------
@@ -56,17 +39,39 @@ bool EcaArm::OnNewMail(MOOSMSG_LIST &NewMail) {
         // only process new messages
         if (MOOSTime() - msg.GetTime() < 5) {
             string key = msg.GetKey();
-            if (key == "ECA_ARM_VOLTAGE_1") {
-                command_left = msg.GetDouble();
-                new_command_left = true;
-            } else if (key == "DESIRED_THRUST_RIGHT") {
-                command_right = msg.GetDouble();
-                new_command_right = true;
-            } else if (key == "ECA_ARM_POWER") {
+            if (key == "ECA_YAW_VOLTAGE") {
+                last_update_time[yaw_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), true, yaw_index);
+            } else if (key == "ECA_SHOULDER_VOLTAGE") {
+                last_update_time[shoulder_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), true, shoulder_index);
+            } else if (key == "ECA_ELBOW_VOLTAGE") {
+                last_update_time[elbow_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), true, elbow_index);
+            } else if (key == "ECA_WRIST_VOLTAGE") {
+                last_update_time[wrist_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), true, wrist_index);
+            } else if (key == "ECA_GRIP_VOLTAGE") {
+                last_update_time[grip_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), true, grip_index);
+            } else if (key == "ECA_YAW_SPEED") {
+                last_update_time[yaw_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), false, yaw_index);
+            } else if (key == "ECA_SHOULDER_SPEED") {
+                last_update_time[shoulder_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), false, shoulder_index);
+            } else if (key == "ECA_ELBOW_SPEED") {
+                last_update_time[elbow_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), false, elbow_index);
+            } else if (key == "ECA_WRIST_SPEED") {
+                last_update_time[wrist_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), false, wrist_index);
+            } else if (key == "ECA_GRIP_SPEED") {
+                last_update_time[grip_index] = msg.GetTime();
+                handleDemand(msg.GetDouble(), false, grip_index);
+            } else if (key == "ECA_ENABLE") {
                 if (msg.GetDouble() == 1) {
-                    setArmPower(true);
                 } else {
-                    setArmPower(false);
                 }
             }
         }
@@ -75,13 +80,42 @@ bool EcaArm::OnNewMail(MOOSMSG_LIST &NewMail) {
     return (true);
 }
 
+void EcaArm::handleDemand(double command, bool is_voltage, int index) {
+    if (is_voltage) {
+        demands[index] = fabs(command) * 100.0/max_voltage;
+    } else {
+        demands[index] = fabs(command) * 100.0/max_speed;
+    }
+    DemandType this_demand;
+    if (command > 0) {
+        if (is_voltage) this_demand = demand_voltage_cw;
+        else this_demand = demand_speed_cw;
+    } else if (command < 0) {
+        if (is_voltage) this_demand = demand_voltage_ccw;
+        else this_demand = demand_speed_ccw;
+    } else {
+        this_demand = demand_stop;
+    }
+    demand_types[index] = this_demand;
+}
+
 //---------------------------------------------------------
 // Procedure: OnConnectToServer
 
 bool EcaArm::OnConnectToServer() {
-    m_Comms.Register("ECA_ARM_VOLTAGE_1", 0);
+    m_Comms.Register("ECA_YAW_VOLTAGE", 0);
+    m_Comms.Register("ECA_SHOULDER_VOLTAGE", 0);
+    m_Comms.Register("ECA_ELBOW_VOLTAGE", 0);
+    m_Comms.Register("ECA_WRIST_VOLTAGE", 0);
+    m_Comms.Register("ECA_GRIP_VOLTAGE", 0);
 
-    m_Comms.Register("ECA_ARM_ENABLE", 0);
+    m_Comms.Register("ECA_YAW_SPEED", 0);
+    m_Comms.Register("ECA_SHOULDER_SPEED", 0);
+    m_Comms.Register("ECA_ELBOW_SPEED", 0);
+    m_Comms.Register("ECA_WRIST_SPEED", 0);
+    m_Comms.Register("ECA_GRIP_SPEED", 0);
+
+    m_Comms.Register("ECA_ENABLE", 0);
 
     return (true);
 }
@@ -91,16 +125,49 @@ bool EcaArm::OnConnectToServer() {
 //            happens AppTick times per second
 
 bool EcaArm::Iterate() {
-    if (new_command_left) {
-        setThrust(2, command_left);
-        new_command_left = false;
+    for (int i=0; i<5; i++) {
+        if (MOOSTime() - last_update_time[i] > 0.5) {
+            demand_types[i] = demand_stop;
+        }
     }
 
-    if (new_command_right) {
-        setThrust(1, command_right);
-        new_command_right = false;
+    DemandPackage package;
+    package.start_byte = 0xE7;
+    package.master_data[0] = 0;
+    package.master_data[1] = 0;
+    package.master_data[2] = 0;
+
+    DemandMessage message;
+    for (int i=0; i<5; i++) {
+        message.start_byte = 0x00;
+        message.demand_type = demand_types[i];
+        message.demand = demands[i];
+        message.speed_limit = 4095;
+        message.current_limit = 4095;
+        message.stop_byte = 0x00;
+        package.motor_demands[i] = message;
     }
-    
+
+    package.checksum = doChecksum(&package.start_byte, 49);
+    package.stop_byte = 0xE5;
+
+    boost::asio::write(sock, boost::asio::buffer(&package, sizeof(package)));
+
+    boost::asio::async_read(sock, boost::asio::buffer(input_buffer, 51),
+            boost::bind( &EcaArm::handle_read, this, _1,
+                    boost::ref(deadline_timer),
+                    boost::asio::placeholders::error,
+                    boost::asio::placeholders::bytes_transferred));
+//    sock.async_read_some(boost::asio::buffer(input_buffer, 51),
+//            boost::bind( &EcaArm::handle_read, this, _1,
+//                    boost::ref(deadline_timer),
+//                    boost::asio::placeholders::error,
+//                    boost::asio::placeholders::bytes_transferred ) );
+    deadline_timer.expires_from_now(boost::posix_time::milliseconds(250));
+    deadline_timer.async_wait(boost::bind(&EcaArm::handle_wait, this,
+            boost::ref(sock), boost::asio::placeholders::error));
+    io_service.run();
+
     return (true);
 }
 
@@ -132,219 +199,36 @@ bool EcaArm::OnStartUp() {
             serial_port_base::stop_bits(serial_port_base::stop_bits::one));
     sock.set_option(serial_port_base::character_size(8));
 
-
-    boost::asio::async_write(sock, boost::asio::buffer("^ECHOF 1\r", 9),
-            boost::bind(&EcaArm::handle_basic_write, this, _1));
-    
-    start_write();
-    start_read();
-    io_thread = boost::thread(boost::bind(&EcaArm::io_loop, this));
-
     return (true);
 }
 
-void EcaArm::io_loop() {
-    cout << "Running io service" << endl;
-    io_service.run();
-    cout << "Finished running io service" << endl;
-}
-
-
-void EcaArm::handle_basic_write(const boost::system::error_code& ec) {
-    if (!ec) {
-    } else {
-        cout << "Error on basic write: " << ec.message() << endl;
+unsigned char EcaArm::doChecksum(unsigned char* c, int length) {
+    unsigned int sum = 0;
+    for (int i=0; i<length; i++) {
+        sum += *c;
+        c++;
     }
+    return (unsigned char) sum;
 }
 
-void EcaArm::handle_command_write(const boost::system::error_code& ec) {
-    if (!ec) {
-        power_command_count++;
-    } else {
-        cout << "Error on command write: " << ec.message() << endl;
+void EcaArm::handle_read(bool data_available, boost::asio::deadline_timer& timeout,
+        const boost::system::error_code& error, std::size_t bytes_transferred) {
+    if (error || !bytes_transferred) {
+        cout << "No data was read" << endl;
+        // no data read
+        return;
     }
+
+    cout << "Read " << bytes_transferred << endl;
+
+    deadline_timer.cancel();
 }
 
-void EcaArm::start_read() {
-    boost::asio::async_read_until(sock, input_buffer, '\r',
-            boost::bind(&EcaArm::handle_read, this, _1, _2));
-}
-
-void EcaArm::handle_read(const boost::system::error_code& ec, std::size_t bt) {
-    if (!ec) {
-        // construct istream from boost streambuf
-        std::string line;
-        std::istream is(&input_buffer);
-        //std::getline(is, line);
-        safeGetline(is, line);
-
-        parseLine(line);
-
-        start_read();
-    } else {
-        cout << "Error on receive: " << ec.message() << endl;
-    }
-}
-
-std::istream& EcaArm::safeGetline(std::istream& is, std::string& t)
+void EcaArm::handle_wait(boost::asio::serial_port& ser_port, const boost::system::error_code& error)
 {
-    t.clear();
-
-    // The characters in the stream are read one-by-one using a std::streambuf.
-    // That is faster than reading them one-by-one using the std::istream.
-    // Code that uses streambuf this way must be guarded by a sentry object.
-    // The sentry object performs various tasks,
-    // such as thread synchronization and updating the stream state.
-
-    std::istream::sentry se(is, true);
-    std::streambuf* sb = is.rdbuf();
-
-    for(;;) {
-        int c = sb->sbumpc();
-        switch (c) {
-        case '\n':
-            return is;
-        case '\r':
-            if(sb->sgetc() == '\n')
-                sb->sbumpc();
-            return is;
-        case EOF:
-            // Also handle the case when the last line has no line ending
-            if(t.empty())
-                is.setstate(std::ios::eofbit);
-            return is;
-        default:
-            t += (char)c;
-        }
+    if (error) {
+        // data read, timeout cancelled
+        return;
     }
-}
-
-void EcaArm::start_write() {
-    string slow_query = slow_queries[slow_query_index] + "?P\r";
-    boost::asio::async_write(sock, boost::asio::buffer(slow_query, slow_query.size()),
-            boost::bind(&EcaArm::handle_write, this, _1));
-
-    slow_query_index++;
-    if (slow_query_index == slow_queries.size()) {
-        slow_query_index = 0;
-    }
-}
-
-void EcaArm::handle_write(const boost::system::error_code& ec) {
-    if (!ec) {
-        deadline_timer.expires_from_now(boost::posix_time::milliseconds(20));
-        deadline_timer.async_wait(boost::bind(&EcaArm::start_write, this));
-    } else {
-        cout << "Error on query write: " << ec.message() << endl;
-    }
-}
-
-void EcaArm::setThrust(int channel, double thrust) {
-    int power = -thrust * 10.0;
-    char command [100];
-    int n = sprintf(command, "!G %d %d\r", channel, power);
-    boost::asio::async_write(sock, boost::asio::buffer(command, n),
-            boost::bind(&EcaArm::handle_command_write, this, _1));
-}
-
-void EcaArm::setArmPower(bool power) {
-    string command;
-    if (power)
-        command = "!D1 2\r";
-    else
-        command = "!D0 2\r";
-
-    boost::asio::async_write(sock, boost::asio::buffer(command, command.size()),
-            boost::bind(&EcaArm::handle_basic_write, this, _1));
-}
-
-void EcaArm::parseLine(string line) {
-    switch (line[0]) {
-    case 'V':
-        int v1, v2, v3;
-        if (sscanf(line.c_str(), "V=%d:%d:%d", &v1, &v2, &v3) == 3) {
-            m_Comms.Notify("ROBOTEQ_BATTERY_VOLTAGE", v2/10.0);
-        } else {
-            cout << "Voltage parse error" << endl;
-        }
-        break;
-
-    case 'A':
-        int a1, a2;
-        if (sscanf(line.c_str(), "A=%d:%d", &a1, &a2) == 2) {
-            m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_RIGHT", a1/10.0);
-            m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_LEFT", a2/10.0);
-        } else {
-            cout << "Motor current parse error" << endl;
-        }
-        break;
-
-    case 'B':
-        int b1, b2;
-        if (sscanf(line.c_str(), "BA=%d:%d", &b1, &b2) == 2) {
-            m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_RIGHT", b1/10.0);
-            m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_LEFT", b2/10.0);
-        } else {
-            cout << "Battery current parse error" << endl;
-        }
-        break;
-
-    case 'T':
-        int t1, t2;
-        if (sscanf(line.c_str(), "T=%d:%d", &t1, &t2) == 2) {
-            m_Comms.Notify("ROBOTEQ_TEMPERATURE_RIGHT", t1/10.0);
-            m_Comms.Notify("ROBOTEQ_TEMPERATURE_LEFT", t2/10.0);
-        } else {
-            cout << "Temperature parse error" << endl;
-        }
-        break;
-
-    case 'D':
-        int d1;
-        if (sscanf(line.c_str(), "DI=%d", &d1) == 1) {
-            m_Comms.Notify("ROBOTEQ_ESTOP", (double) d1);
-        } else {
-            cout << "Estop parse error" << endl;
-        }
-        break;
-
-    case 'P':
-        int p1, p2;
-        if (sscanf(line.c_str(), "P=%d:%d", &p1, &p2) == 2) {
-            m_Comms.Notify("ROBOTEQ_POWER_LEFT", p1);
-            m_Comms.Notify("ROBOTEQ_POWER_RIGHT", p2);
-            power_report_count++;
-        } else {
-            cout << "Power parse error" << endl;
-        }
-        break;
-
-    case '+':
-        ack_count++;
-        break;
-
-    case '-':
-        nack_count++;
-        break;
-    }
-
-
-    if (MOOSTime() - last_report_time > 5) {
-        double time_elapsed = MOOSTime() - last_report_time;
-        double power_report_rate = power_report_count / time_elapsed;
-        double power_command_rate = power_command_count / time_elapsed;
-        double nack_rate = nack_count / time_elapsed;
-	double ack_rate = ack_count / time_elapsed;
-
-        m_Comms.Notify("ROBOTEQ_REPORT_RATE", power_report_rate);
-        m_Comms.Notify("ROBOTEQ_COMMAND_RATE", power_command_rate);
-        m_Comms.Notify("ROBOTEQ_NACK_RATE", nack_rate);
-	m_Comms.Notify("ROBOTEQ_ACK_RATE", ack_rate);
-
-        power_report_count = 0;
-        power_command_count = 0;
-        ack_count = 0;
-        nack_count = 0;
-        last_report_time = MOOSTime();
-    }
+    sock.cancel(); // read_callback fires with error
 }
