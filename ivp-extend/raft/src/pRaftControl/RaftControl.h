@@ -43,6 +43,8 @@ private:
     // State variables
     unsigned int m_iterations;
     double m_timewarp;
+
+    double last_start_press, last_select_press;
 };
 
 #endif 

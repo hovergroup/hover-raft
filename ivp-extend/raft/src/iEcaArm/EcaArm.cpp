@@ -88,7 +88,7 @@ void EcaArm::handleDemand(double command, bool is_voltage, int index) {
     if (is_voltage) {
         demands[index] = fabs(command) * max_voltage/100.0;
     } else {
-        demands[index] = fabs(command) * /*max_speed*/12000/100.0;
+        demands[index] = fabs(command) * max_speed/100.0;
     }
     DemandType this_demand;
     if (command < 0) {
@@ -199,18 +199,11 @@ bool EcaArm::Iterate() {
 //            happens before connection is open
 
 bool EcaArm::OnStartUp() {
-//    string address = "192.168.1.51";
-//    string port = "5001";
     string port = "/dev/ttyUSB0";
-//    m_MissionReader.GetConfigurationParam("address", address);
-    //m_MissionReader.GetConfigurationParam("port", port);
+    m_MissionReader.GetConfigurationParam("port", port);
+    max_speed = 12000;
+    m_MissionReader.GetConfigurationParam("max_speed", max_speed);
 
-//    tcp::resolver resolver(io_service);
-//    tcp::resolver::query query(tcp::v4(), address, port);
-//    tcp::resolver::iterator iterator = resolver.resolve(query);
-//
-//    sock.connect(*iterator);
-//
     cout << "Opening " << port << endl;
     sock.open(port);
     sock.set_option(serial_port_base::baud_rate(115200));
@@ -237,7 +230,7 @@ unsigned char EcaArm::doChecksum(unsigned char* c, int length) {
 void EcaArm::handle_read(bool data_available, boost::asio::deadline_timer& timeout,
         const boost::system::error_code& error, std::size_t bytes_transferred) {
     if (error || !bytes_transferred) {
-        cout << "No data was read" << endl;
+        cout << "No data was read: " << error << endl;
         // no data read
         return;
     }

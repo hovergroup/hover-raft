@@ -79,6 +79,7 @@ bool Xbox360Controller::Iterate() {
 
 bool Xbox360Controller::OnStartUp() {
     string device = "/dev/input/js1";
+    m_MissionReader.GetConfigurationParam("device", device);
 
     if ((fd = open(device.c_str(), O_RDONLY)) < 0) {
         perror("jstest");
@@ -104,6 +105,9 @@ bool Xbox360Controller::OnStartUp() {
         return false;
     } else {
         cout << "Found: " << name << endl;
+        string sname = string(name);
+        if (sname.find("Microsoft X-Box 360 pad") == string::npos)
+            return false;
         io_thread = boost::thread(boost::bind(&Xbox360Controller::io_loop, this));
         return true;
     }

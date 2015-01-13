@@ -104,7 +104,7 @@ private:
     static const int grip_index = 4;
 
     static const int max_voltage = 65535;
-    static const int max_speed = 4095;
+   int max_speed;
 
     DemandType demand_types[5];
     unsigned short demands[5];

@@ -5,17 +5,17 @@ Community = raft
 ProcessConfig = iEcaArm
 {
     IterateMode = 0  // regular iterate and mail
-    AppTick     = 50 //iterate speed
+    AppTick     = 50 // iterate speed
     
+    port = /dev/ttyUSB0
+    max_speed = 12000
 }
 
 ProcessConfig = iRaftRoboteq
 {
     IterateMode = 0    // regular iterate and mail
     AppTick     = 50   // iterate speed
-   
-    //address = 192.168.1.51
-    //address = 127.0.0.1
+    
     port = /dev/ttyUSB0
 }
 
@@ -23,6 +23,8 @@ ProcessConfig = iXbox360Controller
 {
     IterateMode = 0
     AppTick     = 1
+    
+    device = /dev/input/js1
 }
 
 ProcessConfig = pRaftControl

@@ -17,6 +17,9 @@ using namespace std;
 RaftControl::RaftControl() {
     enable = false;
     use_speed = false;
+
+    last_start_press = -1;
+    last_select_press = -1;
 }
 
 //---------------------------------------------------------
@@ -43,12 +46,18 @@ bool RaftControl::OnNewMail(MOOSMSG_LIST &NewMail) {
         } else if (key == "XBOX_RSTICKY") {
             right_thrust = -mapThrust(msg.GetDouble(), right_y_neg_dead, right_y_pos_dead);
         } else if (key == "XBOX_START") {
-            if (msg.GetDouble() == 1) {
-                enable = !enable;
+            if (msg.GetTime() - last_start_press > 0.250) {
+                if (msg.GetDouble() == 1) {
+                    enable = !enable;
+                }
+                last_start_press = msg.GetTime();
             }
         } else if (key == "XBOX_SELECT") {
-            if (msg.GetDouble() == 1) {
-                use_speed = !use_speed;
+            if (msg.GetTime() - last_select_press > 0.250) {
+                if (msg.GetDouble() == 1) {
+                    use_speed = !use_speed;
+                }
+                last_select_press = msg.GetTime();
             }
         } else if (key == "XBOX_DPADX") {
             yaw_speed = -mapECASpeed(msg.GetDouble(), -500, 500);
