@@ -78,7 +78,7 @@ bool Xbox360Controller::Iterate() {
 //            happens before connection is open
 
 bool Xbox360Controller::OnStartUp() {
-    string device = "/dev/input/js0";
+    string device = "/dev/input/js1";
 
     if ((fd = open(device.c_str(), O_RDONLY)) < 0) {
         perror("jstest");

@@ -24,7 +24,9 @@ protected:
 
 private:
     double right_thrust, left_thrust;
-    bool enable;
+    double yaw_speed, shoulder_speed, elbow_speed, wrist_speed, jaw_speed;
+    
+    bool enable, use_speed;
     // Configuration variables
 
 private:
@@ -35,6 +37,8 @@ private:
 
     bool parseDeadBand(std::string config, double & neg, double & pos);
     double mapThrust(double input, double neg, double pos);
+    double mapECASpeed(double input, double neg, double pos);
+    double mapTrigger(double input, double dead);
 
     // State variables
     unsigned int m_iterations;

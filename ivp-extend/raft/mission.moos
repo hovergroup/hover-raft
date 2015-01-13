@@ -2,6 +2,13 @@ ServerHost = localhost
 ServerPort = 9000
 Community = raft
 
+ProcessConfig = iEcaArm
+{
+    IterateMode = 0  // regular iterate and mail
+    AppTick     = 50 //iterate speed
+    
+}
+
 ProcessConfig = iRaftRoboteq
 {
     IterateMode = 0    // regular iterate and mail

@@ -12,8 +12,11 @@
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+#include "boost/assign.hpp"
 
 #include <iostream>
+
+#pragma pack(1)
 
 enum DemandType {
     demand_stop = 0,
@@ -64,6 +67,13 @@ struct SensorPackage {
     unsigned char stop_byte;
 };
 
+static const std::map<int,std::string> MotorMap = boost::assign::map_list_of
+        (0,"SHOULDER")
+        (1,"YAW")
+        (2,"ELBOW")
+        (3,"WRIST")
+        (4,"GRIP");
+
 class EcaArm: public CMOOSApp {
 public:
     EcaArm();
@@ -87,13 +97,13 @@ private:
             const boost::system::error_code& error, std::size_t bytes_transferred);
     void handle_wait(boost::asio::serial_port& ser_port, const boost::system::error_code& error);
 
-    static const int yaw_index = 0;
-    static const int shoulder_index = 1;
+    static const int yaw_index = 1;
+    static const int shoulder_index = 0;
     static const int elbow_index = 2;
     static const int wrist_index = 3;
     static const int grip_index = 4;
 
-    static const int max_voltage = 65536;
+    static const int max_voltage = 65535;
     static const int max_speed = 4095;
 
     DemandType demand_types[5];
@@ -103,8 +113,15 @@ private:
     int mapVoltage(double voltage);
     int mapRPM(double voltage);
     void handleDemand(double command, bool is_voltage, int index);
+    
+    unsigned short bswap16(unsigned short val) { return (val<<8)|(val>>8); }
+    void bswapDemandPackage(DemandPackage & package);
+    void bswapSensorPackage(SensorPackage & package);
 
     unsigned char doChecksum(unsigned char* c, int length);
+    
+    double last_report_time;
+    int report_count;
 };
 
 #endif 
