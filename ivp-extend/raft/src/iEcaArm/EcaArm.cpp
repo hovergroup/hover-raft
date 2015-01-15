@@ -239,13 +239,28 @@ void EcaArm::handle_read(bool data_available, boost::asio::deadline_timer& timeo
     if (bytes_transferred == 51) {
         SensorPackage package;
         memcpy(&package.start_byte, &input_buffer[0], 51);
+        if (package.checksum != doChecksum(&package.start_byte, 49)) {
+            cout << "Failed checksum" << endl;
+            deadline_timer.cancel();
+            return;
+        }
         //bswapSensorPackage(package);
         m_Comms.Notify("ECA_VOLTAGE",111500.0*3.3*package.master_voltage/255.0/6800.0);
         m_Comms.Notify("ECA_CURRENT",(((package.master_current/511.0*3.3)/(39.0/59.0))/0.625)*6.0-0.2);
+        m_Comms.Notify("ECA_TEMPERATURE", (3.3*package.master_temperature/255.0)/0.0066101694915254237288135593220339);
         for (int i=0; i<5; i++) {
             string prefix = MotorMap.find(i)->second;
             m_Comms.Notify("ECA_" + prefix + "_SPEED", package.motor_data[i].speed);
             m_Comms.Notify("ECA_" + prefix + "_POSITION", package.motor_data[i].position);
+            //bswap16(package.motor_data[i].current);
+            /*if (prefix == "GRIP") {
+                for (int j=0; j<8; j++) {
+                    cout << hex << (int) package.motor_data[i].bytes[j] << " ";
+                }
+                cout << endl;
+            }*/
+            m_Comms.Notify("ECA_" + prefix + "_CURRENT", package.motor_data[i].current);
+            m_Comms.Notify("ECA_" + prefix + "_TEMPERATURE", (package.motor_data[i].temperature*3.3/255.0)/0.0066101694915254237288135593220339);
         }
         report_count++;
         if (MOOSTime() - last_report_time > 5) {
@@ -277,8 +292,8 @@ void EcaArm::bswapDemandPackage(DemandPackage & package) {
 
 void EcaArm::bswapSensorPackage(SensorPackage & package) {
     for (int i=0; i<5; i++) {
-        package.motor_data[i].position = bswap16(package.motor_data[i].position);
-        package.motor_data[i].speed = bswap16(package.motor_data[i].speed);
-        package.motor_data[i].current = bswap16(package.motor_data[i].current);
+        //package.motor_data[i].position = bswap16(package.motor_data[i].position);
+        //package.motor_data[i].speed = bswap16(package.motor_data[i].speed);
+        //package.motor_data[i].current = bswap16(package.motor_data[i].current);
     }
 }

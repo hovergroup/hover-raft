@@ -50,9 +50,12 @@ struct SensorMessage {
     unsigned char start_byte;
     unsigned short position;
     unsigned short speed;
-    unsigned short current;
+    //unsigned char bytes[8];
+    // this next bit is completely different from the documentation
+    unsigned char dummy;
     unsigned char temperature;
-    unsigned char stop_byte;
+    unsigned short current;
+    //unsigned char stop_byte;
 };
 
 struct SensorPackage {
