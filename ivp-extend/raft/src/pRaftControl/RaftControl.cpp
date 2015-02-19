@@ -20,6 +20,13 @@ RaftControl::RaftControl() {
 
     last_start_press = -1;
     last_select_press = -1;
+
+    rb = 0;
+    lb = 0;
+    rtrig = 0;
+    ltrig = 0;
+    a = 0;
+    b = 0;
 }
 
 //---------------------------------------------------------
@@ -33,10 +40,6 @@ RaftControl::~RaftControl() {
 
 bool RaftControl::OnNewMail(MOOSMSG_LIST &NewMail) {
     MOOSMSG_LIST::iterator p;
-    
-    double rb=0, lb=0;
-    double rtrig=0, ltrig=0;
-    double a=0, b=0;
     
     for (p = NewMail.begin(); p != NewMail.end(); p++) {
         CMOOSMsg &msg = *p;

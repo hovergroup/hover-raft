@@ -45,6 +45,11 @@ private:
     double m_timewarp;
 
     double last_start_press, last_select_press;
+
+
+    double rb, lb;
+    double rtrig, ltrig;
+    double a, b;
 };
 
 #endif 
