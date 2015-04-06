@@ -19,6 +19,7 @@ ADD_EXECUTABLE(iXbox360Controller ${SRC})
 TARGET_LINK_LIBRARIES(iXbox360Controller
    ${MOOS_LIBRARIES}
    boost_thread
+   boost_system
    mbutil
    m
    pthread)

@@ -23,22 +23,22 @@ SET(BUILD_SHORE_APPS TRUE CACHE BOOL "Build shore apps")
 # Find the hovergroup trunk
 #=============================================================================
 
-find_path( HOVERGROUP_TRUNK_BASE
-			NAMES src/iAcommsDriver
-			PATHS "../trunk"
-			NO_DEFAULT_PATH
-)
+#find_path( HOVERGROUP_TRUNK_BASE
+#			NAMES src/iAcommsDriver
+#			PATHS "../trunk"
+#			NO_DEFAULT_PATH
+#)
 
-FILE(GLOB HOVERGROUP_LIB_DIRECTORIES 
-    ${HOVERGROUP_TRUNK_BASE}/src/lib_*
-    ${HOVERGROUP_TRUNK_BASE}/src/protobuf)
+#FILE(GLOB HOVERGROUP_LIB_DIRECTORIES 
+#    ${HOVERGROUP_TRUNK_BASE}/src/lib_*
+#    ${HOVERGROUP_TRUNK_BASE}/src/protobuf)
 
-set ( HOVERGROUP_INCLUDE_DIRECTORIES
-		${HOVERGROUP_LIB_DIRECTORIES}
-		${HOVERGROUP_TRUNK_BASE}/src/ )
+#set ( HOVERGROUP_INCLUDE_DIRECTORIES
+#		${HOVERGROUP_LIB_DIRECTORIES}
+#		${HOVERGROUP_TRUNK_BASE}/src/ )
 		
-set ( HOVERGROUP_LIBRARY_PATH
-		${HOVERGROUP_TRUNK_BASE}/lib/ )
+#set ( HOVERGROUP_LIBRARY_PATH
+#		${HOVERGROUP_TRUNK_BASE}/lib/ )
 
 #=============================================================================
 # Find the "goby" base directory
@@ -46,7 +46,7 @@ set ( HOVERGROUP_LIBRARY_PATH
 
 find_path( 	GOBY_BASE
 			NAMES DEPENDENCIES build.sh AUTHORS
-			PATHS "~/goby"
+			PATHS "../../goby"
 			NO_DEFAULT_PATH
 )
 
@@ -62,8 +62,8 @@ set( GOBY_LIBRARY_PATH
 
 # Search for the moos-ivp folder
 find_path( MOOSIVP_SOURCE_TREE_BASE
-           NAMES build-ivp.sh build-moos.sh configure-ivp.sh
-           PATHS "../moos-ivp" "../../moos-ivp" "../../moos-ivp/trunk/" "../moos-ivp/trunk/" "~/moos-ivp"
+           NAMES ivp
+           PATHS "../../moos-ivp"
            DOC "Base directory of the MOOS-IvP source tree"
            NO_DEFAULT_PATH
 )
@@ -93,15 +93,15 @@ find_package(MOOS 10)
 find_package(MOOSGeodesy)
 
 LINK_DIRECTORIES(       ${IVP_LIBRARY_DIRS}
-    			        ${GOBY_LIBRARY_PATH}
-    			        ${HOVERGROUP_LIBRARY_PATH}	)
+    			        ${GOBY_LIBRARY_PATH} )
+    			        #${HOVERGROUP_LIBRARY_PATH}	)
 
 INCLUDE_DIRECTORIES(	${MOOS_INCLUDE_DIRS}
                         ${MOOS_DEPEND_INCLUDE_DIRS}
                         ${MOOSGeodesy_INCLUDE_DIRS}
             			${GOBY_INCLUDE_DIRS}
-            			${IVP_INCLUDE_DIRS}
-            			${HOVERGROUP_INCLUDE_DIRECTORIES}	)
+            			${IVP_INCLUDE_DIRS} )
+            			#${HOVERGROUP_INCLUDE_DIRECTORIES}	)
 
 
 #=============================================================================
