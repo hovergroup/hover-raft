@@ -21,5 +21,7 @@ TARGET_LINK_LIBRARIES(iLoadCell
     mbutil
     ${MOOS_LIBRARIES}
     ${MOOS_DEPEND_LIBRARIES}
+    boost_thread
+    boost_system
     )
 

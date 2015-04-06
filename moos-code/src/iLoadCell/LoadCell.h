@@ -9,6 +9,7 @@
 #define LoadCell_HEADER
 
 #include "MOOS/libMOOS/MOOSLib.h"
+#include <boost/thread.hpp>
 
 class LoadCell : public CMOOSApp
 {
@@ -22,7 +23,10 @@ protected:
     bool OnConnectToServer();
     bool OnStartUp();
 
+    void io_loop();
 private:
+    boost::thread io_thread;
+    int portno;
 };
 
 #endif 
