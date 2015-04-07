@@ -27,6 +27,8 @@ protected:
 private:
     boost::thread io_thread;
     int portno;
+
+    std::vector<std::string> var_names;
 };
 
 #endif 

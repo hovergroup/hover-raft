@@ -79,6 +79,19 @@ bool LoadCell::OnStartUp()
 {
 	portno = 9002;
     m_MissionReader.GetConfigurationParam("port", portno);
+    int params = 6;
+    m_MissionReader.GetConfigurationParam("num_vars", params);
+
+    for (int i=0; i<params; i++) {
+    	std::string config_name = "var" + i;
+    	std::string var_name;
+    	if (!m_MissionReader.GetConfigurationParam(config_name, var_name)) {
+    		std::cout << config_name << " not set in mission file." << std::endl;
+    		return false;
+    	} else {
+    		var_names.push_back(var_name);
+    	}
+    }
 
     io_thread = boost::thread(boost::bind(&LoadCell::io_loop, this));
     return true;
@@ -123,11 +136,18 @@ void LoadCell::io_loop() {
 				std::cout << "connection closed" << std::endl;
 				closed = true;
 			} else {
-				std::cout << "Got data: ";
-				for (int i=0; i<buffer.size(); i++) {
-					std::cout << buffer[i];
+				std::string data(&buffer[0], n);
+				std::cout << data;
+				std::stringstream ss(data);
+				for (int i=0; i<var_names.size(); i++) {
+					double val;
+					ss >> val;
+					if (!ss.fail()) {
+						std::cout << var_names[i] << ": " << val << "   ";
+					}
 				}
 				std::cout << std::endl;
+
 //				std::vector<char>::iterator it =
 //						std::find(buffer.begin(), buffer.end(), "\n");
 			}
