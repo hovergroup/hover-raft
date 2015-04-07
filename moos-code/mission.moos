@@ -2,6 +2,17 @@ ServerHost = localhost
 ServerPort = 9000
 Community = raft
 
+ProcessConfig = ANTLER
+{
+    MSBetweenLaunches = 200
+
+    Run = MOOSDB             @ NewConsole = false
+    Run = iEcaArm            @ NewConsole = false
+//    Run = iRaftRoboteq       @ NewConsole = false
+    Run = iLoadCell          @ NewConsole = false
+    Run = iXbox360Controller @ NewConsole = false
+}
+
 ProcessConfig = iEcaArm
 {
     IterateMode = 0  // regular iterate and mail
@@ -24,7 +35,7 @@ ProcessConfig = iXbox360Controller
     IterateMode = 0
     AppTick     = 1
     
-    device = /dev/input/js1
+    device = /dev/input/js0
 }
 
 ProcessConfig = pRaftControl
@@ -45,6 +56,14 @@ ProcessConfig = iLoadCell
 	AppTick = 1
 	
 	port = 9002
+    num_vars = 6
+
+    var0 = Fx
+    var1 = Fy
+    var2 = Fz
+    var3 = Tx
+    var4 = Ty
+    var5 = Tz
 }
 
 //uXMS mission.moos XBOX_LSTICKY XBOX_RSTICKY DESIRED_THRUST_LEFT DESIRED_THRUST_RIGHT ROBOTEQ_ACK_RATE ROBOTEQ_COMMAND_RATE ROBOTEQ_REPORT_RATE ROBOTEQ_BATTERY_CURRENT_LEFT ROBOTEQ_BATTERY_CURRENT_RIGHT ROBOTEQ_NACK_RATE

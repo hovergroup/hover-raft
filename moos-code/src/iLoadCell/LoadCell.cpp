@@ -83,10 +83,11 @@ bool LoadCell::OnStartUp()
     m_MissionReader.GetConfigurationParam("num_vars", params);
 
     for (int i=0; i<params; i++) {
-    	std::string config_name = "var" + i;
+        std::stringstream config_name;
+        config_name << "var" << i;
     	std::string var_name;
-    	if (!m_MissionReader.GetConfigurationParam(config_name, var_name)) {
-    		std::cout << config_name << " not set in mission file." << std::endl;
+    	if (!m_MissionReader.GetConfigurationParam(config_name.str(), var_name)) {
+    		std::cout << config_name.str() << " not set in mission file." << std::endl;
     		return false;
     	} else {
     		var_names.push_back(var_name);
@@ -137,16 +138,17 @@ void LoadCell::io_loop() {
 				closed = true;
 			} else {
 				std::string data(&buffer[0], n);
-				std::cout << data;
+				//std::cout << data;
 				std::stringstream ss(data);
 				for (int i=0; i<var_names.size(); i++) {
 					double val;
 					ss >> val;
 					if (!ss.fail()) {
-						std::cout << var_names[i] << ": " << val << "   ";
+                        m_Comms.Notify(var_names[i], val);
+						//std::cout << var_names[i] << ": " << val << "   ";
 					}
 				}
-				std::cout << std::endl;
+				//std::cout << std::endl;
 
 //				std::vector<char>::iterator it =
 //						std::find(buffer.begin(), buffer.end(), "\n");
