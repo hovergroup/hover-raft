@@ -91,6 +91,7 @@ bool LoadCell::OnStartUp()
     		return false;
     	} else {
     		var_names.push_back(var_name);
+std::cout << var_name << std::endl;
     	}
     }
 
@@ -138,14 +139,14 @@ void LoadCell::io_loop() {
 				closed = true;
 			} else {
 				std::string data(&buffer[0], n);
-				//std::cout << data;
+				std::cout << data;
 				std::stringstream ss(data);
 				for (int i=0; i<var_names.size(); i++) {
 					double val;
 					ss >> val;
 					if (!ss.fail()) {
                         m_Comms.Notify(var_names[i], val);
-						//std::cout << var_names[i] << ": " << val << "   ";
+						std::cout << var_names[i] << ": " << val << "   ";
 					}
 				}
 				//std::cout << std::endl;

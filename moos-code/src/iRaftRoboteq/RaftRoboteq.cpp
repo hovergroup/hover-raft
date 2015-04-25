@@ -56,10 +56,10 @@ bool RaftRoboteq::OnNewMail(MOOSMSG_LIST &NewMail) {
         // only process new messages
         if (MOOSTime() - msg.GetTime() < 5) {
             string key = msg.GetKey();
-            if (key == "DESIRED_THRUST_LEFT") {
+            if (key == "DESIRED_POWER_CH2") {
                 command_left = msg.GetDouble();
                 new_command_left = true;
-            } else if (key == "DESIRED_THRUST_RIGHT") {
+            } else if (key == "DESIRED_POWER_CH1") {
                 command_right = msg.GetDouble();
                 new_command_right = true;
             } else if (key == "ECA_ARM_POWER") {
@@ -79,8 +79,8 @@ bool RaftRoboteq::OnNewMail(MOOSMSG_LIST &NewMail) {
 // Procedure: OnConnectToServer
 
 bool RaftRoboteq::OnConnectToServer() {
-    m_Comms.Register("DESIRED_THRUST_LEFT", 0);
-    m_Comms.Register("DESIRED_THRUST_RIGHT", 0);
+    m_Comms.Register("DESIRED_POWER_CH1", 0);
+    m_Comms.Register("DESIRED_POWER_CH2", 0);
     m_Comms.Register("ECA_ARM_POWER", 0);
 
     return (true);
@@ -113,7 +113,7 @@ bool RaftRoboteq::OnStartUp() {
 //    string port = "5001";
     string port = "/dev/ttyUSB0";
 //    m_MissionReader.GetConfigurationParam("address", address);
-    //m_MissionReader.GetConfigurationParam("port", port);
+    m_MissionReader.GetConfigurationParam("port", port);
 
 //    tcp::resolver resolver(io_service);
 //    tcp::resolver::query query(tcp::v4(), address, port);
@@ -220,9 +220,10 @@ std::istream& RaftRoboteq::safeGetline(std::istream& is, std::string& t)
 }
 
 void RaftRoboteq::start_write() {
-    string slow_query = slow_queries[slow_query_index] + "?P\r";
+    string slow_query = slow_queries[slow_query_index] + "?P\r?AI 1\r";
     boost::asio::async_write(sock, boost::asio::buffer(slow_query, slow_query.size()),
             boost::bind(&RaftRoboteq::handle_write, this, _1));
+    
 
     slow_query_index++;
     if (slow_query_index == slow_queries.size()) {
@@ -271,19 +272,28 @@ void RaftRoboteq::parseLine(string line) {
 
     case 'A':
         int a1, a2;
-        if (sscanf(line.c_str(), "A=%d:%d", &a1, &a2) == 2) {
-            m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_RIGHT", a1/10.0);
-            m_Comms.Notify("ROBOTEQ_MOTOR_CURRENT_LEFT", a2/10.0);
+        if (line.size() < 2) break;
+        if (line[1] == 'I') {
+            if (sscanf(line.c_str(), "AI=%d", &a1) == 1) {
+                m_Comms.Notify("ROBOTEQ_AIN1_VOLTS", a1/1000.0);
+            } else {
+                cout << "Ain parse error" << endl;
+            }
         } else {
-            cout << "Motor current parse error" << endl;
+            if (sscanf(line.c_str(), "A=%d:%d", &a1, &a2) == 2) {
+                m_Comms.Notify("ROBOTEQ_CH1_CURRENT", a1/10.0);
+                m_Comms.Notify("ROBOTEQ_CH2_CURRENT", a2/10.0);
+            } else {
+                cout << "Motor current parse error" << endl;
+            }
         }
         break;
 
     case 'B':
         int b1, b2;
         if (sscanf(line.c_str(), "BA=%d:%d", &b1, &b2) == 2) {
-            m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_RIGHT", b1/10.0);
-            m_Comms.Notify("ROBOTEQ_BATTERY_CURRENT_LEFT", b2/10.0);
+            m_Comms.Notify("ROBOTEQ_CH1_BATTERY_CURRENT", b1/10.0);
+            m_Comms.Notify("ROBOTEQ_CH2_BATTERY_CURRENT", b2/10.0);
         } else {
             cout << "Battery current parse error" << endl;
         }
@@ -292,8 +302,8 @@ void RaftRoboteq::parseLine(string line) {
     case 'T':
         int t1, t2;
         if (sscanf(line.c_str(), "T=%d:%d", &t1, &t2) == 2) {
-            m_Comms.Notify("ROBOTEQ_TEMPERATURE_RIGHT", t1/10.0);
-            m_Comms.Notify("ROBOTEQ_TEMPERATURE_LEFT", t2/10.0);
+            m_Comms.Notify("ROBOTEQ_CH1_TEMPERATURE", (double) t1);
+            m_Comms.Notify("ROBOTEQ_CH2_TEMPERATURE", (double) t2);
         } else {
             cout << "Temperature parse error" << endl;
         }
@@ -311,8 +321,8 @@ void RaftRoboteq::parseLine(string line) {
     case 'P':
         int p1, p2;
         if (sscanf(line.c_str(), "P=%d:%d", &p1, &p2) == 2) {
-            m_Comms.Notify("ROBOTEQ_POWER_LEFT", p1);
-            m_Comms.Notify("ROBOTEQ_POWER_RIGHT", p2);
+            m_Comms.Notify("ROBOTEQ_CH1_POWER", p1);
+            m_Comms.Notify("ROBOTEQ_CH2_POWER", p2);
             power_report_count++;
         } else {
             cout << "Power parse error" << endl;

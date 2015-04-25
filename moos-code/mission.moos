@@ -7,8 +7,8 @@ ProcessConfig = ANTLER
     MSBetweenLaunches = 200
 
     Run = MOOSDB             @ NewConsole = false
-    Run = iEcaArm            @ NewConsole = false
-//    Run = iRaftRoboteq       @ NewConsole = false
+//    Run = iEcaArm            @ NewConsole = false
+    Run = iRaftRoboteq       @ NewConsole = false
     Run = iLoadCell          @ NewConsole = false
     Run = iXbox360Controller @ NewConsole = false
 }

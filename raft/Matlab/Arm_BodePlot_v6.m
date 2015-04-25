@@ -12,23 +12,43 @@ mag  = zeros(1,1);
 phase = zeros(1,1);
 phase_lag = zeros(1,1);
 amplitude_ratio = zeros(1,1);
-pot2pos = -4875.7 %(-4871.9+-4799.9+-4888.5 +-4939.5+-4878.8)/5;
+zeroed  = zeros(1,1);
+pot2pos = -1.096*10^4;
 
 
-ans='connecting to arduino...'
+disp('connecting to arduino...')
 a = arduino('/dev/ttyACM0','uno');
-ans='connected!'
+disp('connected!')
 
 for j=1:length(omega)
     
+    % Zero arm position
     mexmoos('CLOSE');
     pause(1);
     mexmoos('init','SERVERHOST','localhost','SERVERPORT','9000');
     pause(1);
-
-    mexmoos('REGISTER','ECA_SHOULDER_SPEED',0);
-    mexmoos('REGISTER','ECA_SHOULDER_POSITION',0);
-
+    
+    msgs=mexmoos('FETCH');
+    
+    while (zeroed==0)
+        if (readVoltage(a,0) < 2.5)
+            mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',-50);
+        elseif (readVoltage(a,0) > 2.5)
+            mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',50);
+        else
+            zeroed=1;
+            disp('Zeroed!')
+            mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',0);
+            mexmoos('CLOSE');
+            pause(1);
+            mexmoos('init','SERVERHOST','localhost','SERVERPORT','9000');
+            pause(1);
+            mexmoos('REGISTER','ECA_SHOULDER_SPEED',0);
+            mexmoos('REGISTER','ECA_SHOULDER_POSITION',0);
+            tic;
+        end
+    end
+   
     time = zeros(1,1);
     speed = zeros(1,1);
     position = zeros(1,1);
@@ -44,16 +64,16 @@ for j=1:length(omega)
     while (exit==0)
         msgs=mexmoos('FETCH');
 
-        if (toc < 1)
+        if (toc < 0.825)
             mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',0);
             cmd = 0;
         end
-        if (toc > 1)
+        if (toc > 0.825)
             av(pot_index)=readVoltage(a,0);
             pottime(pot_index)=toc;
             pot_index=pot_index+1;
             
-            cmd = sin((toc-1)*omega(j))*50;
+            cmd = cos((toc-1)*omega(j))*100;
             mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',cmd);
         end
             
@@ -76,7 +96,7 @@ for j=1:length(omega)
             exit = 1;
         end
 
-        if (toc > 3*2*pi/omega(j)+1)
+        if (toc > 10*2*pi/omega(j)+1.175)
             mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',0);
             exit = 1;
         end
@@ -95,10 +115,10 @@ for j=1:length(omega)
     newtime = [];
     newcom = [];
     index = 1;
-
+ 
     currentpos = -8888888;
     currentvel = -8888888;
-
+ 
     for a=1:length(position)
         if position(a)~=currentpos
             currentpos=position(a);
@@ -110,62 +130,45 @@ for j=1:length(omega)
         end
     end
     
-    
-    %% Use this if you are doing frequency response of position
-    %{
-    newcom = abs(newcom*120);
-    newpos = newpos-min(newpos);
-    position = position-min(position);
-    
-    %% Prepare data for FFT
-    window=sin(pi*newtime/newtime(end));
-    newcom=(newcom-mean(newcom)).*window;
-    newpos=(newpos-mean(newpos)).*window;
-    %}
-    
+    pot2pos=-1.096*10^4;
+    av_original=av;
+    newpos_original=newpos;
     %% Use this if you are taking manual derivatibe of position
-    newpos=(newpos-min(newpos));
-    speed_fit = diff(newpos)./diff(newtime);
-    speed_fit= abs(speed_fit);
-    newspd = speed_fit*max(newvel)/(max(speed_fit)*120);
-    newcom = abs((newcom(2:end)-mean(newcom(2:end))));
-    newtime = newtime(2:end);
-    newpos = newpos-min(newpos);
-    position = position-min(position);
-    newpos = newpos(2:end);
-    newvel = newvel(2:end)./120;
     
-    [~,idx] = find(max(av));
+    av=av_original;
+    newpos=newpos_original;
+
+    idx1 = find(pottime==newtime(2));
+    av(1:idx1-1)=[];
+    av=av-mean(av);
+    pottime(1:idx1-1)=[];
+
+
+
+    cutoff = (2*omega/pi)/(1/mean(diff(pottime)));
+    [num,den] = butter(6,cutoff);
+
+    av_butter = filtfilt(num,den,av);
+    plot(pottime,av,pottime,av_butter)
+
+    [~,idx] = find(max(av_butter));
     if idx==1
-        pos = (av-mean(av(idx:idx+3))).*pot2pos;
-    elseif idx==length(av)
-        pos = (av-mean(av(idx-3:idx))).*pot2pos;
-    elseif idx > 2 || idx < length(av)-1
-        pos = (av-mean(av(idx-2:idx+2))).*pot2pos;
-    else pos = (av-mean(av(idx-1:idx+1))).*pot2pos;
+        pos = (av_butter-mean(av_butter(idx:idx+3))).*pot2pos;
+    elseif idx==length(av_butter)
+        pos = (av_butter-mean(av_butter(idx-3:idx))).*pot2pos;
+    elseif idx > 2 || idx < length(av_butter)-1
+        pos = (av_butter-mean(av_butter(idx-2:idx+2))).*pot2pos;
+    else pos = (av_butter-mean(av_butter(idx-1:idx+1))).*pot2pos;
     end
-    spd = diff(filter(ones(1,5)/5,1,pos)-min(filter(ones(1,5)/5,1,pos)))./diff(pottime-2.5*mean(diff(time)));
-    spd = abs(spd);
-    spd = spd*max(newvel)/(max(spd)*120);
-    spd = filter(ones(1,5)/5,1,spd);
-    time=[];
-    time = pottime(2:end);
-    
-    %%do you want to use moving average filter?
-    plot(pottime, pos, pottime-2.5*mean(diff(time)), filter(ones(1,5)/5,1,pos)-min(filter(ones(1,5)/5,1,pos)))
-    %% otherwise
-    
-    figure(2)
-    subplot(211);
-    plot(newtime, newcom, newtime, newvel, time, spd*max(newcom)/max(spd))
-    legend('Command','Arm Reading','Potentiometer Reading')
-    title('Velocity Response')
-    subplot(212);
-    %plot(newtime, newpos, time, pos-min(pos))
-    plot(newtime, newpos, pottime-2.5*mean(diff(time)), filter(ones(1,5)/5,1,pos)-min(filter(ones(1,5)/5,1,pos))
-    title('Corrected Position')
-    legend('Arm Reading','Potentiometer Reading')
-    grid;
+
+    newpos=newpos-mean(newpos);
+    pos=pos-mean(pos);
+
+    plot(newtime,newpos,pottime,pos)
+
+
+    %plot(newtime(2:end), newpos(2:end)-mean(newpos(2:end)), pottime(idx1:end), av(idx1:end)*pot2pos-mean(av(idx1:end)*pot2pos))
+
     %{
     % Prepare data for FFT
     newcom(newcom<25)=0;

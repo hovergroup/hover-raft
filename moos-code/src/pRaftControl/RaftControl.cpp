@@ -197,8 +197,8 @@ double RaftControl::mapTrigger(double input, double dead) {
 
 bool RaftControl::Iterate() {
     if (enable) {
-        m_Comms.Notify("DESIRED_THRUST_LEFT", left_thrust);
-        m_Comms.Notify("DESIRED_THRUST_RIGHT", right_thrust);
+        m_Comms.Notify("DESIRED_POWER_CH1", left_thrust);
+        m_Comms.Notify("DESIRED_POWER_CH2", right_thrust);
         if (use_speed) {
             m_Comms.Notify("ECA_YAW_SPEED_CMD", yaw_speed);
             m_Comms.Notify("ECA_ELBOW_SPEED_CMD", elbow_speed);
@@ -213,8 +213,8 @@ bool RaftControl::Iterate() {
             m_Comms.Notify("ECA_GRIP_VOLTAGE_CMD", jaw_speed);
         }
     } else {
-        m_Comms.Notify("DESIRED_THRUST_LEFT", 0.0);
-        m_Comms.Notify("DESIRED_THRUST_RIGHT", 0.0);
+        m_Comms.Notify("DESIRED_POWER_CH1", 0.0);
+        m_Comms.Notify("DESIRED_POWER_CH2", 0.0);
         m_Comms.Notify("ECA_YAW_VOLTAGE_CMD", 0.0);
         m_Comms.Notify("ECA_ELBOW_VOLTAGE_CMD", 0.0);
         m_Comms.Notify("ECA_SHOULDER_VOLTAGE_CMD", 0.0);

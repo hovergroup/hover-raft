@@ -12,7 +12,8 @@ mag  = zeros(1,1);
 phase = zeros(1,1);
 phase_lag = zeros(1,1);
 amplitude_ratio = zeros(1,1);
-pot2pos = -5400; %-4875.7 %(-4871.9+-4799.9+-4888.5 +-4939.5+-4878.8)/5;
+zeroed  = zeros(1,1);
+pot2pos = -1.096*10^4;
 
 
 ans='connecting to arduino...'
@@ -21,14 +22,33 @@ ans='connected!'
 
 for j=1:length(omega)
     
+    % Zero arm position
     mexmoos('CLOSE');
     pause(1);
     mexmoos('init','SERVERHOST','localhost','SERVERPORT','9000');
     pause(1);
-
-    mexmoos('REGISTER','ECA_SHOULDER_SPEED',0);
-    mexmoos('REGISTER','ECA_SHOULDER_POSITION',0);
-
+    
+    msgs=mexmoos('FETCH');
+    
+    while (zeroed==0)
+        if (readVoltage(a,0) < 2.5)
+            mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',-50);
+        elseif (readVoltage(a,0) > 2.5)
+            mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',50);
+        else
+            zeroed=1;
+            disp('Zeroed!')
+            mexmoos('NOTIFY','ECA_SHOULDER_SPEED_CMD',0);
+            mexmoos('CLOSE');
+            pause(1);
+            mexmoos('init','SERVERHOST','localhost','SERVERPORT','9000');
+            pause(1);
+            mexmoos('REGISTER','ECA_SHOULDER_SPEED',0);
+            mexmoos('REGISTER','ECA_SHOULDER_POSITION',0);
+            tic;
+        end
+    end
+   
     time = zeros(1,1);
     speed = zeros(1,1);
     position = zeros(1,1);

@@ -1,13 +1,14 @@
-clear all
-
+clear a
 %% Connect to Arduino
-ans='connecting to arduino...'
+
+disp('connecting to arduino...')
 a = arduino('/dev/ttyACM0','uno');
-ans='connected!'
+disp('connected!')
+
 
 tic
 
-while toc < 1000
+while toc < 10000
     disp(readVoltage(a,0))
     pause(0.01)
 end
